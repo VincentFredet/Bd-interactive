@@ -1,61 +1,176 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Task Manager - Gestionnaire de Tâches Laravel
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Une application Laravel simple pour gérer des tâches internes d'équipe avec des contextes (projets).
 
-## About Laravel
+## 🚀 Installation et Configuration
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+### Prérequis
+- PHP 8.1+
+- Composer
+- SQLite (inclus par défaut)
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+### Installation
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+1. **Cloner et installer les dépendances**
+```bash
+composer install
+npm install && npm run build
+```
 
-## Learning Laravel
+2. **Configuration de l'environnement**
+```bash
+cp .env.example .env
+php artisan key:generate
+```
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+3. **Configuration de la base de données**
+```bash
+touch database/database.sqlite
+php artisan migrate
+php artisan db:seed  # Optionnel: données de test
+```
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+4. **Configuration du stockage**
+```bash
+php artisan storage:link
+```
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+5. **Démarrer l'application**
+```bash
+php artisan serve
+```
 
-## Laravel Sponsors
+L'application sera accessible sur `http://localhost:8000`
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+## 👤 Comptes de test
 
-### Premium Partners
+Après avoir exécuté `php artisan db:seed`, vous pouvez vous connecter avec :
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+- **Email**: admin@example.com
+- **Mot de passe**: password
 
-## Contributing
+ou
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+- **Email**: john@example.com  
+- **Mot de passe**: password
 
-## Code of Conduct
+## 🎯 Fonctionnalités
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+### ✅ Gestion des Tâches
+- **Création/modification/suppression** de tâches
+- **Statuts** : À faire, En cours, Terminé
+- **Priorités** : Faible, Moyenne, Élevée, Urgente
+- **Upload d'images** avec prévisualisation
+- **Attribution** à des utilisateurs
+- **Mise à jour rapide** du statut via dropdown
 
-## Security Vulnerabilities
+### 📁 Gestion des Contextes
+- **Création de contextes** (équivalent de projets)
+- **Filtrage des tâches** par contexte
+- Exemples : "Scale Theme", "Tap It", "Vidéos Milo", "Perso"
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+### 🔐 Authentification
+- **Laravel Breeze** intégré
+- **Inscription/Connexion** simple
+- **Pas de rôles** : tous les utilisateurs peuvent tout voir/modifier
 
-## License
+### 🎨 Interface
+- **Design responsive** avec Tailwind CSS
+- **Interface intuitive** et moderne
+- **Filtres visuels** par contexte
+- **Badges colorés** pour priorités et statuts
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+## 📁 Structure du Projet
+
+```
+app/
+├── Http/Controllers/
+│   ├── TaskController.php      # Gestion des tâches
+│   └── ContextController.php   # Gestion des contextes
+├── Models/
+│   ├── Task.php               # Modèle des tâches
+│   ├── Context.php            # Modèle des contextes
+│   └── User.php               # Modèle des utilisateurs
+database/
+├── migrations/
+│   ├── create_contexts_table.php
+│   └── create_tasks_table.php
+resources/views/
+├── tasks/
+│   ├── index.blade.php        # Liste des tâches
+│   ├── create.blade.php       # Création de tâche
+│   └── edit.blade.php         # Modification de tâche
+└── contexts/
+    └── create.blade.php       # Création de contexte
+```
+
+## 🛠 Utilisation
+
+### Créer un contexte
+1. Cliquer sur "Nouveau Contexte"
+2. Saisir le nom (ex: "Mon Projet")
+3. Valider
+
+### Créer une tâche
+1. Cliquer sur "Nouvelle Tâche"
+2. Remplir les informations :
+   - **Titre** (obligatoire)
+   - **Description** (optionnelle)
+   - **Statut, Priorité, Contexte, Assigné**
+   - **Image** (optionnelle)
+3. Valider
+
+### Filtrer les tâches
+- Utiliser les boutons de contexte en haut de la liste
+- "Tous" affiche toutes les tâches
+
+### Modifier le statut rapidement
+- Utiliser le dropdown directement dans la liste
+- La modification se fait en temps réel
+
+## 📦 Technologies Utilisées
+
+- **Laravel 11** - Framework PHP
+- **Laravel Breeze** - Authentification
+- **Tailwind CSS** - Styling
+- **SQLite** - Base de données
+- **Blade** - Templates
+
+## 🔧 Personnalisation
+
+### Ajouter de nouveaux statuts
+Modifier l'enum dans la migration `create_tasks_table.php` :
+```php
+$table->enum('status', ['todo', 'in_progress', 'done', 'cancelled']);
+```
+
+### Ajouter de nouvelles priorités
+Modifier l'enum dans la migration :
+```php
+$table->enum('priority', ['low', 'medium', 'high', 'urgent', 'critical']);
+```
+
+### Personnaliser les couleurs des badges
+Modifier les méthodes dans `app/Models/Task.php` :
+```php
+public function getPriorityBadgeClassAttribute(): string
+{
+    return match($this->priority) {
+        'critical' => 'bg-purple-100 text-purple-800',
+        // ...
+    };
+}
+```
+
+## 🚀 Déploiement
+
+Pour déployer en production :
+
+1. Configurer les variables d'environnement
+2. Utiliser une vraie base de données (MySQL/PostgreSQL)
+3. Configurer le stockage des fichiers (S3, etc.)
+4. Optimiser avec `php artisan optimize`
+
+---
+
+**Développé avec ❤️ en Laravel**
