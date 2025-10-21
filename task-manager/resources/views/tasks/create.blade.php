@@ -97,6 +97,18 @@
                                 @enderror
                             </div>
 
+                            <!-- Semaine -->
+                            <div>
+                                <label for="week_date" class="block text-sm font-medium text-gray-700">Semaine</label>
+                                <input type="date" name="week_date" id="week_date"
+                                       class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                                       value="{{ old('week_date', request('week', \App\Models\Task::getWeekStart()->format('Y-m-d'))) }}">
+                                <p class="mt-1 text-xs text-gray-500">La tâche sera automatiquement assignée au début de cette semaine</p>
+                                @error('week_date')
+                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
+                            </div>
+
                             <!-- Image -->
                             <div class="md:col-span-2">
                                 <label for="image" class="block text-sm font-medium text-gray-700">Image</label>

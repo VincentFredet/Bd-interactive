@@ -23,6 +23,59 @@
                 </div>
             @endif
 
+            <!-- Navigation par semaine -->
+            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-6">
+                <div class="p-6 bg-white border-b border-gray-200">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-lg font-medium text-gray-900">{{ $weekLabel }}</h3>
+                        <div class="flex items-center space-x-4">
+                            <a href="{{ route('tasks.index', array_merge(request()->query(), ['week' => $previousWeek->format('Y-m-d')])) }}" 
+                               class="flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200">
+                                ← Semaine précédente
+                            </a>
+                            
+                            @if(!$weekStart->isCurrentWeek())
+                                <a href="{{ route('tasks.index', request()->except('week')) }}" 
+                                   class="px-4 py-2 text-sm font-medium text-blue-600 bg-blue-100 rounded-md hover:bg-blue-200">
+                                    Cette semaine
+                                </a>
+                            @endif
+                            
+                            <a href="{{ route('tasks.index', array_merge(request()->query(), ['week' => $nextWeek->format('Y-m-d')])) }}" 
+                               class="flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200">
+                                Semaine suivante →
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <!-- Indicateur visuel de la semaine -->
+                    <div class="mt-4 flex items-center justify-between">
+                        <div class="text-sm text-gray-600">
+                            Du {{ $weekStart->format('l d F Y') }} au {{ $weekStart->copy()->endOfWeek()->format('l d F Y') }}
+                        </div>
+                        
+                        <!-- Statistiques de la semaine -->
+                        <div class="flex items-center space-x-4 text-sm">
+                            <div class="flex items-center space-x-1">
+                                <span class="w-3 h-3 bg-gray-400 rounded-full"></span>
+                                <span>{{ $weekStats['todo'] }} à faire</span>
+                            </div>
+                            <div class="flex items-center space-x-1">
+                                <span class="w-3 h-3 bg-blue-400 rounded-full"></span>
+                                <span>{{ $weekStats['in_progress'] }} en cours</span>
+                            </div>
+                            <div class="flex items-center space-x-1">
+                                <span class="w-3 h-3 bg-green-400 rounded-full"></span>
+                                <span>{{ $weekStats['done'] }} terminées</span>
+                            </div>
+                            <div class="text-gray-700 font-medium">
+                                Total: {{ $weekStats['total'] }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Filtres par contexte -->
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-6">
                 <div class="p-6 bg-white border-b border-gray-200">

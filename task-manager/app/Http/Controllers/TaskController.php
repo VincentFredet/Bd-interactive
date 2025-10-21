@@ -49,6 +49,14 @@ class TaskController extends Controller
             ? 'Cette semaine' 
             : 'Semaine du ' . $weekStart->format('d/m') . ' au ' . $weekEnd->format('d/m');
         
+        // Statistiques de la semaine
+        $weekStats = [
+            'total' => $tasks->count(),
+            'todo' => $tasks->where('status', 'todo')->count(),
+            'in_progress' => $tasks->where('status', 'in_progress')->count(),
+            'done' => $tasks->where('status', 'done')->count(),
+        ];
+        
         return view('tasks.index', compact(
             'tasks', 
             'contexts', 
@@ -57,7 +65,8 @@ class TaskController extends Controller
             'previousWeek', 
             'nextWeek', 
             'currentWeek',
-            'weekLabel'
+            'weekLabel',
+            'weekStats'
         ));
     }
 
@@ -85,7 +94,16 @@ class TaskController extends Controller
             'context_id' => 'nullable|exists:contexts,id',
             'user_id' => 'nullable|exists:users,id',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'week_date' => 'nullable|date',
         ]);
+
+        // Si aucune semaine n'est spécifiée, utiliser la semaine courante
+        if (!isset($validated['week_date'])) {
+            $validated['week_date'] = Task::getWeekStart();
+        } else {
+            // S'assurer que la date est le début de semaine
+            $validated['week_date'] = Task::getWeekStart($validated['week_date']);
+        }
 
         if ($request->hasFile('image')) {
             $imageName = time() . '.' . $request->image->extension();
@@ -131,7 +149,13 @@ class TaskController extends Controller
             'context_id' => 'nullable|exists:contexts,id',
             'user_id' => 'nullable|exists:users,id',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'week_date' => 'nullable|date',
         ]);
+
+        // Si une nouvelle semaine est spécifiée, s'assurer que c'est le début de semaine
+        if (isset($validated['week_date'])) {
+            $validated['week_date'] = Task::getWeekStart($validated['week_date']);
+        }
 
         if ($request->hasFile('image')) {
             // Supprimer l'ancienne image si elle existe
