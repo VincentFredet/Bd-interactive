@@ -5,6 +5,9 @@
                 {{ __('Gestion des Tâches') }}
             </h2>
             <div class="flex space-x-2">
+                <a href="{{ route('tasks.daily') }}" class="bg-purple-500 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded">
+                    Vue Quotidienne
+                </a>
                 <a href="{{ route('contexts.create') }}" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
                     Nouveau Contexte
                 </a>

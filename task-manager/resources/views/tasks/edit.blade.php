@@ -110,6 +110,18 @@
                                 @enderror
                             </div>
 
+                            <!-- Date d'échéance -->
+                            <div>
+                                <label for="due_date" class="block text-sm font-medium text-gray-700">Date d'échéance</label>
+                                <input type="date" name="due_date" id="due_date"
+                                       class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                                       value="{{ old('due_date', $task->due_date ? $task->due_date->format('Y-m-d') : '') }}">
+                                <p class="mt-1 text-xs text-gray-500">Date à laquelle la tâche doit être terminée</p>
+                                @error('due_date')
+                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
+                            </div>
+
                             <!-- Image actuelle -->
                             @if($task->image)
                                 <div class="md:col-span-2">

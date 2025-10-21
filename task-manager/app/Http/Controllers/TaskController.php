@@ -95,6 +95,7 @@ class TaskController extends Controller
             'user_id' => 'nullable|exists:users,id',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'week_date' => 'nullable|date',
+            'due_date' => 'nullable|date',
         ]);
 
         // Si aucune semaine n'est spécifiée, utiliser la semaine courante
@@ -150,6 +151,7 @@ class TaskController extends Controller
             'user_id' => 'nullable|exists:users,id',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'week_date' => 'nullable|date',
+            'due_date' => 'nullable|date',
         ]);
 
         // Si une nouvelle semaine est spécifiée, s'assurer que c'est le début de semaine
@@ -200,5 +202,104 @@ class TaskController extends Controller
         $task->update($validated);
 
         return response()->json(['success' => true]);
+    }
+
+    /**
+     * Vue quotidienne des tâches
+     */
+    public function daily(Request $request)
+    {
+        // Déterminer le jour à afficher
+        $currentDate = $request->has('date') 
+            ? Carbon::parse($request->date)
+            : Carbon::today();
+        
+        $query = Task::with(['context', 'user']);
+        
+        // Filtrer par date d'échéance
+        $query->forDate($currentDate);
+        
+        // Filtrer par contexte si spécifié
+        if ($request->has('context') && $request->context !== '') {
+            $query->where('context_id', $request->context);
+        }
+        
+        $tasks = $query->orderBy('priority', 'desc')
+                      ->orderBy('created_at', 'desc')
+                      ->get();
+        
+        // Tâches en retard (seulement si on regarde aujourd'hui)
+        $overdueTasks = collect();
+        if ($currentDate->isToday()) {
+            $overdueTasks = Task::with(['context', 'user'])
+                               ->overdue()
+                               ->orderBy('due_date', 'asc')
+                               ->get();
+        }
+        
+        $contexts = Context::all();
+        $users = User::all();
+        
+        // Navigation par jour
+        $previousDay = $currentDate->copy()->subDay();
+        $nextDay = $currentDate->copy()->addDay();
+        $today = Carbon::today();
+        
+        // Libellé du jour
+        $dayLabel = $currentDate->isToday() 
+            ? 'Aujourd\'hui' 
+            : $currentDate->format('l d F Y');
+        
+        // Statistiques du jour
+        $dayStats = [
+            'total' => $tasks->count(),
+            'todo' => $tasks->where('status', 'todo')->count(),
+            'in_progress' => $tasks->where('status', 'in_progress')->count(),
+            'done' => $tasks->where('status', 'done')->count(),
+            'overdue' => $overdueTasks->count(),
+        ];
+        
+        return view('tasks.daily', compact(
+            'tasks', 
+            'overdueTasks',
+            'contexts', 
+            'users', 
+            'currentDate', 
+            'previousDay', 
+            'nextDay', 
+            'today',
+            'dayLabel',
+            'dayStats'
+        ));
+    }
+
+    /**
+     * Marquer une tâche comme terminée
+     */
+    public function complete(Task $task)
+    {
+        $task->markAsCompleted();
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Tâche marquée comme terminée!'
+        ]);
+    }
+
+    /**
+     * Reporter une tâche
+     */
+    public function postpone(Request $request, Task $task)
+    {
+        $validated = $request->validate([
+            'date' => 'required|date|after_or_equal:today',
+        ]);
+
+        $task->postponeTo($validated['date']);
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Tâche reportée avec succès!'
+        ]);
     }
 }

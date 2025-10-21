@@ -60,7 +60,10 @@ ou
 - **Création/modification/suppression** de tâches
 - **Statuts** : À faire, En cours, Terminé
 - **Priorités** : Faible, Moyenne, Élevée, Urgente
-- **Organisation par semaine** avec navigation intuitive
+- **Organisation par semaine ET par jour** avec navigation intuitive
+- **Dates d'échéance** avec détection des retards
+- **Cochage rapide** des tâches terminées
+- **Report facile** au lendemain ou à une date choisie
 - **Upload d'images** avec prévisualisation
 - **Attribution** à des utilisateurs
 - **Mise à jour rapide** du statut via dropdown
@@ -78,8 +81,12 @@ ou
 ### 🎨 Interface
 - **Design responsive** avec Tailwind CSS
 - **Interface intuitive** et moderne
-- **Navigation par semaine** (précédente, courante, suivante)
-- **Statistiques visuelles** par semaine
+- **Double navigation** : par semaine ET par jour
+- **Vue quotidienne** avec tâches du jour et en retard
+- **Cochage direct** avec checkbox pour marquer terminé
+- **Boutons de report** intégrés
+- **Statistiques visuelles** par semaine et par jour
+- **Alertes visuelles** pour les tâches en retard
 - **Filtres visuels** par contexte
 - **Badges colorés** pour priorités et statuts
 
@@ -125,10 +132,17 @@ resources/views/
 3. Valider
 
 ### Naviguer et filtrer
-- **Navigation par semaine** : boutons "Semaine précédente/suivante"
-- **Retour à cette semaine** : bouton "Cette semaine"
-- **Filtrer par contexte** : boutons en haut de la liste
-- **Statistiques en temps réel** : compteurs par statut
+- **Vue Semaine** : navigation par semaine avec boutons précédent/suivant
+- **Vue Quotidienne** : navigation par jour avec gestion des tâches quotidiennes
+- **Basculer entre vues** : boutons "Vue Semaine" / "Vue Quotidienne"
+- **Filtrer par contexte** : boutons en haut de chaque vue
+- **Statistiques en temps réel** : compteurs par statut et alertes retards
+
+### Gestion quotidienne
+- **Cocher rapidement** : checkbox pour marquer une tâche terminée
+- **Reporter facilement** : bouton "📅 Reporter" avec sélection de date
+- **Voir les retards** : section spéciale pour les tâches en retard
+- **Navigation par jour** : jour précédent ← Aujourd'hui → jour suivant
 
 ### Modifier le statut rapidement
 - Utiliser le dropdown directement dans la liste

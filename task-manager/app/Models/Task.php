@@ -18,12 +18,16 @@ class Task extends Model
         'user_id',
         'image',
         'week_date',
+        'due_date',
+        'completed_at',
     ];
 
     protected $casts = [
         'status' => 'string',
         'priority' => 'string',
         'week_date' => 'date',
+        'due_date' => 'date',
+        'completed_at' => 'datetime',
     ];
 
     public function context(): BelongsTo
@@ -108,6 +112,100 @@ class Task extends Model
     }
 
     /**
+     * Scope pour filtrer par date d'échéance
+     */
+    public function scopeForDate($query, $date)
+    {
+        return $query->where('due_date', $date);
+    }
+
+    /**
+     * Scope pour les tâches d'aujourd'hui
+     */
+    public function scopeToday($query)
+    {
+        return $query->where('due_date', Carbon::today());
+    }
+
+    /**
+     * Scope pour les tâches en retard
+     */
+    public function scopeOverdue($query)
+    {
+        return $query->where('due_date', '<', Carbon::today())
+                    ->where('status', '!=', 'done');
+    }
+
+    /**
+     * Vérifier si la tâche est en retard
+     */
+    public function getIsOverdueAttribute(): bool
+    {
+        return $this->due_date && 
+               $this->due_date->isPast() && 
+               $this->status !== 'done';
+    }
+
+    /**
+     * Vérifier si la tâche est pour aujourd'hui
+     */
+    public function getIsTodayAttribute(): bool
+    {
+        return $this->due_date && $this->due_date->isToday();
+    }
+
+    /**
+     * Marquer la tâche comme terminée
+     */
+    public function markAsCompleted()
+    {
+        $this->update([
+            'status' => 'done',
+            'completed_at' => Carbon::now(),
+        ]);
+    }
+
+    /**
+     * Reporter la tâche à une date
+     */
+    public function postponeTo($date)
+    {
+        $this->update([
+            'due_date' => Carbon::parse($date),
+            'status' => $this->status === 'done' ? 'todo' : $this->status,
+            'completed_at' => null,
+        ]);
+    }
+
+    /**
+     * Reporter au lendemain
+     */
+    public function postponeToTomorrow()
+    {
+        $this->postponeTo(Carbon::tomorrow());
+    }
+
+    /**
+     * Obtenir le badge de classe pour la date d'échéance
+     */
+    public function getDueDateBadgeClassAttribute(): string
+    {
+        if (!$this->due_date) {
+            return 'bg-gray-100 text-gray-800';
+        }
+
+        if ($this->is_overdue) {
+            return 'bg-red-100 text-red-800';
+        }
+
+        if ($this->is_today) {
+            return 'bg-blue-100 text-blue-800';
+        }
+
+        return 'bg-gray-100 text-gray-800';
+    }
+
+    /**
      * Définir automatiquement la semaine lors de la création si non spécifiée
      */
     protected static function boot()
@@ -117,6 +215,10 @@ class Task extends Model
         static::creating(function ($task) {
             if (!$task->week_date) {
                 $task->week_date = self::getWeekStart();
+            }
+            // Si pas de date d'échéance, utiliser aujourd'hui
+            if (!$task->due_date) {
+                $task->due_date = Carbon::today();
             }
         });
     }

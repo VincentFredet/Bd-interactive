@@ -19,6 +19,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('tasks', TaskController::class);
     Route::patch('/tasks/{task}/status', [TaskController::class, 'updateStatus'])->name('tasks.update-status');
     
+    // Daily task management
+    Route::get('/daily', [TaskController::class, 'daily'])->name('tasks.daily');
+    Route::patch('/tasks/{task}/complete', [TaskController::class, 'complete'])->name('tasks.complete');
+    Route::patch('/tasks/{task}/postpone', [TaskController::class, 'postpone'])->name('tasks.postpone');
+    
     // Contexts routes
     Route::resource('contexts', ContextController::class);
     
