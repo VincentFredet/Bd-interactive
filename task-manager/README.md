@@ -124,9 +124,11 @@ resources/views/
    - **Image** (optionnelle)
 3. Valider
 
-### Filtrer les tâches
-- Utiliser les boutons de contexte en haut de la liste
-- "Tous" affiche toutes les tâches
+### Naviguer et filtrer
+- **Navigation par semaine** : boutons "Semaine précédente/suivante"
+- **Retour à cette semaine** : bouton "Cette semaine"
+- **Filtrer par contexte** : boutons en haut de la liste
+- **Statistiques en temps réel** : compteurs par statut
 
 ### Modifier le statut rapidement
 - Utiliser le dropdown directement dans la liste
