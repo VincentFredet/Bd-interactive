@@ -60,6 +60,7 @@ ou
 - **Création/modification/suppression** de tâches
 - **Statuts** : À faire, En cours, Terminé
 - **Priorités** : Faible, Moyenne, Élevée, Urgente
+- **Organisation par semaine** avec navigation intuitive
 - **Upload d'images** avec prévisualisation
 - **Attribution** à des utilisateurs
 - **Mise à jour rapide** du statut via dropdown
@@ -77,6 +78,8 @@ ou
 ### 🎨 Interface
 - **Design responsive** avec Tailwind CSS
 - **Interface intuitive** et moderne
+- **Navigation par semaine** (précédente, courante, suivante)
+- **Statistiques visuelles** par semaine
 - **Filtres visuels** par contexte
 - **Badges colorés** pour priorités et statuts
 
@@ -117,6 +120,7 @@ resources/views/
    - **Titre** (obligatoire)
    - **Description** (optionnelle)
    - **Statut, Priorité, Contexte, Assigné**
+   - **Semaine** (par défaut : semaine courante)
    - **Image** (optionnelle)
 3. Valider
 
