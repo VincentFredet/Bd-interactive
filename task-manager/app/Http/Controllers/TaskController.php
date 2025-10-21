@@ -7,6 +7,7 @@ use App\Models\Task;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Carbon\Carbon;
 
 class TaskController extends Controller
 {
@@ -15,17 +16,49 @@ class TaskController extends Controller
      */
     public function index(Request $request)
     {
+        // Déterminer la semaine à afficher
+        $weekStart = $request->has('week') 
+            ? Carbon::parse($request->week)->startOfWeek(Carbon::MONDAY)
+            : Task::getWeekStart();
+        
         $query = Task::with(['context', 'user']);
         
+        // Filtrer par semaine
+        $query->forWeek($weekStart);
+        
+        // Filtrer par contexte si spécifié
         if ($request->has('context') && $request->context !== '') {
             $query->where('context_id', $request->context);
         }
         
-        $tasks = $query->orderBy('created_at', 'desc')->get();
+        $tasks = $query->orderBy('priority', 'desc')
+                      ->orderBy('created_at', 'desc')
+                      ->get();
+        
         $contexts = Context::all();
         $users = User::all();
         
-        return view('tasks.index', compact('tasks', 'contexts', 'users'));
+        // Calculer les semaines pour la navigation
+        $currentWeek = Task::getWeekStart();
+        $previousWeek = $currentWeek->copy()->subWeek();
+        $nextWeek = $currentWeek->copy()->addWeek();
+        
+        // Libellé de la semaine actuelle
+        $weekEnd = $weekStart->copy()->endOfWeek(Carbon::SUNDAY);
+        $weekLabel = $weekStart->isCurrentWeek() 
+            ? 'Cette semaine' 
+            : 'Semaine du ' . $weekStart->format('d/m') . ' au ' . $weekEnd->format('d/m');
+        
+        return view('tasks.index', compact(
+            'tasks', 
+            'contexts', 
+            'users', 
+            'weekStart', 
+            'previousWeek', 
+            'nextWeek', 
+            'currentWeek',
+            'weekLabel'
+        ));
     }
 
     /**
