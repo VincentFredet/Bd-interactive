@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ContextController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SubtaskController;
 use App\Http\Controllers\TaskCommentController;
@@ -41,6 +42,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/tasks/{task}/comments', [TaskCommentController::class, 'store'])->name('task-comments.store');
     Route::patch('/comments/{comment}', [TaskCommentController::class, 'update'])->name('task-comments.update');
     Route::delete('/comments/{comment}', [TaskCommentController::class, 'destroy'])->name('task-comments.destroy');
+
+    // Notifications routes
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount'])->name('notifications.unread-count');
+    Route::patch('/notifications/{notification}/read', [NotificationController::class, 'markAsRead'])->name('notifications.mark-as-read');
+    Route::patch('/notifications/{notification}/unread', [NotificationController::class, 'markAsUnread'])->name('notifications.mark-as-unread');
+    Route::post('/notifications/mark-all-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
+    Route::delete('/notifications/{notification}', [NotificationController::class, 'destroy'])->name('notifications.destroy');
+    Route::delete('/notifications/delete-all-read', [NotificationController::class, 'deleteAllRead'])->name('notifications.delete-all-read');
 
     // Profile routes
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
