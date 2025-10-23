@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreTaskRequest;
+use App\Http\Requests\UpdateTaskRequest;
 use App\Models\Context;
 use App\Models\Task;
 use App\Models\User;
@@ -84,19 +86,9 @@ class TaskController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StoreTaskRequest $request)
     {
-        $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'status' => 'in:todo,in_progress,done',
-            'priority' => 'in:low,medium,high,urgent',
-            'context_id' => 'nullable|exists:contexts,id',
-            'user_id' => 'nullable|exists:users,id',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'week_date' => 'nullable|date',
-            'due_date' => 'nullable|date',
-        ]);
+        $validated = $request->validated();
 
         // Si aucune semaine n'est spécifiée, utiliser la semaine courante
         if (!isset($validated['week_date'])) {
@@ -140,19 +132,9 @@ class TaskController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Task $task)
+    public function update(UpdateTaskRequest $request, Task $task)
     {
-        $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'status' => 'in:todo,in_progress,done',
-            'priority' => 'in:low,medium,high,urgent',
-            'context_id' => 'nullable|exists:contexts,id',
-            'user_id' => 'nullable|exists:users,id',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'week_date' => 'nullable|date',
-            'due_date' => 'nullable|date',
-        ]);
+        $validated = $request->validated();
 
         // Si une nouvelle semaine est spécifiée, s'assurer que c'est le début de semaine
         if (isset($validated['week_date'])) {
@@ -195,13 +177,42 @@ class TaskController extends Controller
      */
     public function updateStatus(Request $request, Task $task)
     {
-        $validated = $request->validate([
-            'status' => 'required|in:todo,in_progress,done',
-        ]);
+        try {
+            $validated = $request->validate([
+                'status' => 'required|in:todo,in_progress,done',
+            ]);
 
-        $task->update($validated);
+            $oldStatus = $task->status;
+            $task->update($validated);
 
-        return response()->json(['success' => true]);
+            return response()->json([
+                'success' => true,
+                'message' => 'Statut mis à jour avec succès',
+                'task' => [
+                    'id' => $task->id,
+                    'status' => $task->status,
+                    'old_status' => $oldStatus,
+                ],
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Données invalides',
+                'errors' => $e->errors(),
+            ], 422);
+        } catch (\Exception $e) {
+            \Log::error('Error updating task status', [
+                'task_id' => $task->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de la mise à jour du statut',
+                'error' => config('app.debug') ? $e->getMessage() : 'Une erreur est survenue',
+            ], 500);
+        }
     }
 
     /**
@@ -278,12 +289,38 @@ class TaskController extends Controller
      */
     public function complete(Task $task)
     {
-        $task->markAsCompleted();
-        
-        return response()->json([
-            'success' => true,
-            'message' => 'Tâche marquée comme terminée!'
-        ]);
+        try {
+            if ($task->status === 'done') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'La tâche est déjà terminée',
+                ], 422);
+            }
+
+            $task->markAsCompleted();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Tâche marquée comme terminée!',
+                'task' => [
+                    'id' => $task->id,
+                    'status' => $task->status,
+                    'completed_at' => $task->completed_at?->format('Y-m-d H:i:s'),
+                ],
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Error completing task', [
+                'task_id' => $task->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de la complétion de la tâche',
+                'error' => config('app.debug') ? $e->getMessage() : 'Une erreur est survenue',
+            ], 500);
+        }
     }
 
     /**
@@ -291,15 +328,46 @@ class TaskController extends Controller
      */
     public function postpone(Request $request, Task $task)
     {
-        $validated = $request->validate([
-            'date' => 'required|date|after_or_equal:today',
-        ]);
+        try {
+            $validated = $request->validate([
+                'date' => 'required|date|after_or_equal:today',
+            ], [
+                'date.required' => 'La date est obligatoire',
+                'date.date' => 'La date n\'est pas valide',
+                'date.after_or_equal' => 'La date ne peut pas être dans le passé',
+            ]);
 
-        $task->postponeTo($validated['date']);
-        
-        return response()->json([
-            'success' => true,
-            'message' => 'Tâche reportée avec succès!'
-        ]);
+            $oldDueDate = $task->due_date;
+            $task->postponeTo($validated['date']);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Tâche reportée avec succès!',
+                'task' => [
+                    'id' => $task->id,
+                    'due_date' => $task->due_date->format('Y-m-d'),
+                    'old_due_date' => $oldDueDate?->format('Y-m-d'),
+                    'status' => $task->status,
+                ],
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Données invalides',
+                'errors' => $e->errors(),
+            ], 422);
+        } catch (\Exception $e) {
+            \Log::error('Error postponing task', [
+                'task_id' => $task->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors du report de la tâche',
+                'error' => config('app.debug') ? $e->getMessage() : 'Une erreur est survenue',
+            ], 500);
+        }
     }
 }

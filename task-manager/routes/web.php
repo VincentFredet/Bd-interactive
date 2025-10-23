@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\ContextController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\SubtaskController;
+use App\Http\Controllers\TaskCommentController;
 use App\Http\Controllers\TaskController;
 use Illuminate\Support\Facades\Route;
 
@@ -26,7 +28,20 @@ Route::middleware(['auth', 'verified'])->group(function () {
     
     // Contexts routes
     Route::resource('contexts', ContextController::class);
-    
+
+    // Subtasks routes
+    Route::post('/tasks/{task}/subtasks', [SubtaskController::class, 'store'])->name('subtasks.store');
+    Route::patch('/subtasks/{subtask}', [SubtaskController::class, 'update'])->name('subtasks.update');
+    Route::patch('/subtasks/{subtask}/toggle', [SubtaskController::class, 'toggle'])->name('subtasks.toggle');
+    Route::delete('/subtasks/{subtask}', [SubtaskController::class, 'destroy'])->name('subtasks.destroy');
+    Route::post('/tasks/{task}/subtasks/reorder', [SubtaskController::class, 'reorder'])->name('subtasks.reorder');
+
+    // Task comments routes
+    Route::get('/tasks/{task}/comments', [TaskCommentController::class, 'index'])->name('task-comments.index');
+    Route::post('/tasks/{task}/comments', [TaskCommentController::class, 'store'])->name('task-comments.store');
+    Route::patch('/comments/{comment}', [TaskCommentController::class, 'update'])->name('task-comments.update');
+    Route::delete('/comments/{comment}', [TaskCommentController::class, 'destroy'])->name('task-comments.destroy');
+
     // Profile routes
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');

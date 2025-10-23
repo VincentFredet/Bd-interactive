@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Storage;
 use Carbon\Carbon;
 
@@ -40,6 +41,16 @@ class Task extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function subtasks(): HasMany
+    {
+        return $this->hasMany(Subtask::class)->orderBy('order');
+    }
+
+    public function comments(): HasMany
+    {
+        return $this->hasMany(TaskComment::class);
+    }
+
     public function getImageUrlAttribute(): ?string
     {
         return $this->image ? Storage::url('tasks/' . $this->image) : null;
@@ -64,6 +75,41 @@ class Task extends Model
             'done' => 'bg-green-100 text-green-800',
             default => 'bg-gray-100 text-gray-800',
         };
+    }
+
+    /**
+     * Get the completion percentage of subtasks
+     */
+    public function getSubtasksCompletionPercentageAttribute(): int
+    {
+        $total = $this->subtasks->count();
+        if ($total === 0) {
+            return 0;
+        }
+
+        $completed = $this->subtasks->where('completed', true)->count();
+        return (int) round(($completed / $total) * 100);
+    }
+
+    /**
+     * Check if all subtasks are completed
+     */
+    public function getAreAllSubtasksCompletedAttribute(): bool
+    {
+        $total = $this->subtasks->count();
+        if ($total === 0) {
+            return false;
+        }
+
+        return $this->subtasks->where('completed', true)->count() === $total;
+    }
+
+    /**
+     * Get the number of completed subtasks
+     */
+    public function getCompletedSubtasksCountAttribute(): int
+    {
+        return $this->subtasks->where('completed', true)->count();
     }
 
     /**
