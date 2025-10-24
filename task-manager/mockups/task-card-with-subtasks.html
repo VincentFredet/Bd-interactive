@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mockup - Carte de Tâche avec Sous-tâches</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background: #f3f4f6;
+        }
+        .progress-bar {
+            transition: width 0.3s ease;
+        }
+    </style>
+</head>
+<body class="p-8">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-3xl font-bold text-gray-800 mb-2">📋 Mockup - Carte de Tâche</h1>
+        <p class="text-gray-600 mb-8">Vue détaillée d'une tâche avec sous-tâches et progression</p>
+
+        <!-- Carte de tâche complète -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6 border-l-4 border-blue-500">
+            <!-- En-tête de la tâche -->
+            <div class="flex items-start justify-between mb-4">
+                <div class="flex-1">
+                    <div class="flex items-center gap-3 mb-2">
+                        <h2 class="text-2xl font-semibold text-gray-900">Développer la nouvelle feature de login</h2>
+                        <span class="px-3 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800">
+                            Urgent
+                        </span>
+                        <span class="px-3 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">
+                            En cours
+                        </span>
+                    </div>
+
+                    <p class="text-gray-600 mb-3">
+                        Implémenter le système d'authentification OAuth2 avec support Google et GitHub.
+                        Inclure la gestion de sessions et remember me.
+                    </p>
+
+                    <div class="flex items-center gap-4 text-sm text-gray-500">
+                        <span class="bg-gray-100 px-3 py-1 rounded">📁 Scale Theme</span>
+                        <span>👤 Assigné à: Vincent</span>
+                        <span class="px-3 py-1 rounded bg-blue-100 text-blue-800">📅 Aujourd'hui</span>
+                        <span>🕐 Créée le 20/10/2025</span>
+                    </div>
+                </div>
+
+                <div class="flex flex-col gap-2 ml-4">
+                    <img src="https://via.placeholder.com/120x80/4F46E5/FFFFFF?text=Screenshot"
+                         alt="Screenshot"
+                         class="w-32 h-20 object-cover rounded border-2 border-gray-200">
+                    <select class="text-sm border-gray-300 rounded-md px-2 py-1">
+                        <option>À faire</option>
+                        <option selected>En cours</option>
+                        <option>Terminé</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Barre de progression des sous-tâches -->
+            <div class="mb-4 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-sm font-semibold text-gray-700">Progression des sous-tâches</span>
+                    <span class="text-sm font-bold text-blue-600">62.5% complété</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+                    <div class="progress-bar bg-gradient-to-r from-blue-500 to-indigo-600 h-3 rounded-full"
+                         style="width: 62.5%"></div>
+                </div>
+                <div class="mt-2 text-xs text-gray-600">
+                    5 sur 8 sous-tâches terminées
+                </div>
+            </div>
+
+            <!-- Liste des sous-tâches -->
+            <div class="border-t pt-4">
+                <div class="flex items-center justify-between mb-3">
+                    <h3 class="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                        <span>📝</span> Sous-tâches
+                    </h3>
+                    <button class="text-sm text-blue-600 hover:text-blue-800 font-medium">
+                        + Ajouter une sous-tâche
+                    </button>
+                </div>
+
+                <div class="space-y-2">
+                    <!-- Sous-tâche terminée -->
+                    <div class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition group">
+                        <input type="checkbox" checked
+                               class="w-5 h-5 text-green-600 rounded cursor-pointer">
+                        <span class="flex-1 text-gray-400 line-through">Analyser les besoins et spécifications</span>
+                        <span class="text-xs text-gray-400">✓ Terminé il y a 2h</span>
+                        <button class="opacity-0 group-hover:opacity-100 text-red-600 hover:text-red-800 text-sm">
+                            🗑️
+                        </button>
+                    </div>
+
+                    <!-- Sous-tâche terminée -->
+                    <div class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition group">
+                        <input type="checkbox" checked
+                               class="w-5 h-5 text-green-600 rounded cursor-pointer">
+                        <span class="flex-1 text-gray-400 line-through">Créer les migrations de base de données</span>
+                        <span class="text-xs text-gray-400">✓ Terminé il y a 1h</span>
+                        <button class="opacity-0 group-hover:opacity-100 text-red-600 hover:text-red-800 text-sm">
+                            🗑️
+                        </button>
+                    </div>
+
+                    <!-- Sous-tâche terminée -->
+                    <div class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition group">
+                        <input type="checkbox" checked
+                               class="w-5 h-5 text-green-600 rounded cursor-pointer">
+                        <span class="flex-1 text-gray-400 line-through">Implémenter le controller d'authentification</span>
+                        <span class="text-xs text-gray-400">✓ Terminé il y a 30 min</span>
+                        <button class="opacity-0 group-hover:opacity-100 text-red-600 hover:text-red-800 text-sm">
+                            🗑️
+                        </button>
+                    </div>
+
+                    <!-- Sous-tâche terminée -->
+                    <div class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition group">
+                        <input type="checkbox" checked
+                               class="w-5 h-5 text-green-600 rounded cursor-pointer">
+                        <span class="flex-1 text-gray-400 line-through">Créer les vues Blade pour login/register</span>
+                        <span class="text-xs text-gray-400">✓ Terminé il y a 15 min</span>
+                        <button class="opacity-0 group-hover:opacity-100 text-red-600 hover:text-red-800 text-sm">
+                            🗑️
+                        </button>
+                    </div>
+
+                    <!-- Sous-tâche terminée -->
+                    <div class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition group">
+                        <input type="checkbox" checked
+                               class="w-5 h-5 text-green-600 rounded cursor-pointer">
+                        <span class="flex-1 text-gray-400 line-through">Configurer OAuth Google et GitHub</span>
+                        <span class="text-xs text-gray-400">✓ Terminé à l'instant</span>
+                        <button class="opacity-0 group-hover:opacity-100 text-red-600 hover:text-red-800 text-sm">
+                            🗑️
+                        </button>
+                    </div>
+
+                    <!-- Sous-tâche en cours (non cochée) -->
+                    <div class="flex items-center gap-3 p-3 rounded-lg bg-yellow-50 hover:bg-yellow-100 transition group border-l-2 border-yellow-400">
+                        <input type="checkbox"
+                               class="w-5 h-5 text-blue-600 rounded cursor-pointer">
+                        <span class="flex-1 text-gray-900 font-medium">Écrire les tests unitaires et feature tests</span>
+                        <span class="text-xs px-2 py-1 bg-yellow-200 text-yellow-800 rounded-full font-medium">
+                            En cours
+                        </span>
+                        <button class="opacity-0 group-hover:opacity-100 text-red-600 hover:text-red-800 text-sm">
+                            🗑️
+                        </button>
+                    </div>
+
+                    <!-- Sous-tâche non commencée -->
+                    <div class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition group">
+                        <input type="checkbox"
+                               class="w-5 h-5 text-blue-600 rounded cursor-pointer">
+                        <span class="flex-1 text-gray-700">Documenter l'API et les endpoints</span>
+                        <button class="opacity-0 group-hover:opacity-100 text-red-600 hover:text-red-800 text-sm">
+                            🗑️
+                        </button>
+                    </div>
+
+                    <!-- Sous-tâche non commencée -->
+                    <div class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition group">
+                        <input type="checkbox"
+                               class="w-5 h-5 text-blue-600 rounded cursor-pointer">
+                        <span class="flex-1 text-gray-700">Tester en conditions réelles et debugger</span>
+                        <button class="opacity-0 group-hover:opacity-100 text-red-600 hover:text-red-800 text-sm">
+                            🗑️
+                        </button>
+                    </div>
+
+                    <!-- Formulaire d'ajout (caché par défaut) -->
+                    <div class="flex items-center gap-3 p-3 rounded-lg bg-blue-50 border-2 border-dashed border-blue-300" style="display: none;">
+                        <span class="text-blue-600">+</span>
+                        <input type="text"
+                               placeholder="Titre de la nouvelle sous-tâche..."
+                               class="flex-1 border-0 bg-transparent focus:outline-none focus:ring-0">
+                        <button class="text-sm text-blue-600 hover:text-blue-800 font-medium">Ajouter</button>
+                        <button class="text-sm text-gray-600 hover:text-gray-800">Annuler</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions de la tâche -->
+            <div class="flex items-center justify-between mt-6 pt-4 border-t">
+                <div class="flex gap-2">
+                    <button class="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg font-medium transition">
+                        ✓ Marquer comme terminé
+                    </button>
+                    <button class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium transition">
+                        📅 Reporter
+                    </button>
+                </div>
+                <div class="flex gap-2">
+                    <button class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg font-medium transition">
+                        ✏️ Modifier
+                    </button>
+                    <button class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg font-medium transition">
+                        🗑️ Supprimer
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Légende -->
+        <div class="bg-white rounded-lg shadow-sm p-4 border-l-4 border-green-500">
+            <h3 class="font-semibold text-gray-800 mb-2">💡 Fonctionnalités de ce mockup</h3>
+            <ul class="text-sm text-gray-600 space-y-1">
+                <li>✅ <strong>Progression visuelle</strong> : Barre de progression avec pourcentage</li>
+                <li>✅ <strong>Toggle rapide</strong> : Cocher/décocher les sous-tâches en un clic</li>
+                <li>✅ <strong>Badges colorés</strong> : Priorité, statut, et contexte visuels</li>
+                <li>✅ <strong>Actions contextuelles</strong> : Boutons de suppression au hover</li>
+                <li>✅ <strong>Sous-tâche en cours</strong> : Mise en évidence de la tâche active</li>
+                <li>✅ <strong>Ajout rapide</strong> : Formulaire inline pour nouvelles sous-tâches</li>
+                <li>✅ <strong>Timestamps</strong> : Indication du moment de complétion</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // Simulation d'interactivité
+        document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                const parent = this.parentElement;
+                const span = parent.querySelector('span.flex-1');
+
+                if (this.checked) {
+                    span.classList.add('text-gray-400', 'line-through');
+                    span.classList.remove('text-gray-700', 'text-gray-900', 'font-medium');
+                } else {
+                    span.classList.remove('text-gray-400', 'line-through');
+                    span.classList.add('text-gray-700');
+                }
+
+                // Mettre à jour la barre de progression
+                updateProgress();
+            });
+        });
+
+        function updateProgress() {
+            const total = document.querySelectorAll('input[type="checkbox"]').length;
+            const checked = document.querySelectorAll('input[type="checkbox"]:checked').length;
+            const percentage = Math.round((checked / total) * 100);
+
+            document.querySelector('.progress-bar').style.width = percentage + '%';
+            document.querySelector('.text-blue-600').textContent = percentage + '% complété';
+        }
+    </script>
+</body>
+</html>

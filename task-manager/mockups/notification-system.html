@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mockup - Système de Notifications</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background: #f3f4f6;
+        }
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .dropdown-enter {
+            animation: slideDown 0.2s ease-out;
+        }
+        .notification-unread {
+            background: linear-gradient(to right, #EFF6FF, white);
+            border-left: 3px solid #3B82F6;
+        }
+        .notification-read {
+            background: white;
+            opacity: 0.8;
+        }
+        .badge-pulse {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: .7;
+            }
+        }
+    </style>
+</head>
+<body class="p-0 m-0">
+    <!-- Navigation avec système de notifications -->
+    <nav class="bg-white shadow-sm border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <h1 class="text-xl font-bold text-gray-800">Task Manager</h1>
+                </div>
+
+                <div class="flex items-center gap-6">
+                    <!-- Icône de notifications avec badge -->
+                    <div class="relative" id="notificationButton">
+                        <button onclick="toggleNotifications()"
+                                class="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition">
+                            <!-- Icône cloche -->
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                      d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                            </svg>
+
+                            <!-- Badge de compteur -->
+                            <span class="absolute top-0 right-0 inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-red-500 rounded-full badge-pulse">
+                                7
+                            </span>
+                        </button>
+
+                        <!-- Dropdown des notifications -->
+                        <div id="notificationDropdown"
+                             class="hidden absolute right-0 mt-2 w-96 bg-white rounded-lg shadow-2xl border border-gray-200 z-50 dropdown-enter">
+
+                            <!-- En-tête -->
+                            <div class="flex items-center justify-between p-4 border-b border-gray-200">
+                                <div>
+                                    <h3 class="text-lg font-semibold text-gray-900">Notifications</h3>
+                                    <p class="text-sm text-gray-500">7 non lues</p>
+                                </div>
+                                <button onclick="markAllAsRead()"
+                                        class="text-sm text-blue-600 hover:text-blue-800 font-medium">
+                                    Tout marquer comme lu
+                                </button>
+                            </div>
+
+                            <!-- Liste des notifications -->
+                            <div class="max-h-96 overflow-y-auto">
+                                <!-- Notification NON LUE -->
+                                <div class="notification-unread p-4 hover:bg-blue-50 cursor-pointer transition">
+                                    <div class="flex items-start gap-3">
+                                        <div class="flex-shrink-0 text-2xl">
+                                            👤
+                                        </div>
+                                        <div class="flex-1 min-w-0">
+                                            <p class="text-sm font-semibold text-gray-900">
+                                                Tâche assignée
+                                            </p>
+                                            <p class="text-sm text-gray-700 mt-1">
+                                                Vous avez été assigné à "Développer la feature de login OAuth"
+                                            </p>
+                                            <div class="flex items-center justify-between mt-2">
+                                                <span class="text-xs text-gray-500">Il y a 5 minutes</span>
+                                                <span class="text-xs px-2 py-1 bg-blue-500 text-white rounded-full font-medium">
+                                                    Nouveau
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <button onclick="markAsRead(event, 1)" class="text-gray-400 hover:text-gray-600">
+                                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Notification NON LUE avec commentaire -->
+                                <div class="notification-unread p-4 hover:bg-blue-50 cursor-pointer transition border-t border-gray-100">
+                                    <div class="flex items-start gap-3">
+                                        <div class="flex-shrink-0 text-2xl">
+                                            💬
+                                        </div>
+                                        <div class="flex-1 min-w-0">
+                                            <p class="text-sm font-semibold text-gray-900">
+                                                Nouveau commentaire
+                                            </p>
+                                            <p class="text-sm text-gray-700 mt-1">
+                                                Marie a commenté sur "Fix bug page d'accueil"
+                                            </p>
+                                            <div class="flex items-center justify-between mt-2">
+                                                <span class="text-xs text-gray-500">Il y a 10 minutes</span>
+                                                <span class="text-xs px-2 py-1 bg-blue-500 text-white rounded-full font-medium">
+                                                    Nouveau
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <button onclick="markAsRead(event, 2)" class="text-gray-400 hover:text-gray-600">
+                                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Notification d'échéance proche -->
+                                <div class="notification-unread p-4 hover:bg-blue-50 cursor-pointer transition border-t border-gray-100">
+                                    <div class="flex items-start gap-3">
+                                        <div class="flex-shrink-0 text-2xl">
+                                            ⏰
+                                        </div>
+                                        <div class="flex-1 min-w-0">
+                                            <p class="text-sm font-semibold text-gray-900">
+                                                Échéance proche
+                                            </p>
+                                            <p class="text-sm text-gray-700 mt-1">
+                                                "Préparer la présentation client" doit être terminée dans 2 heures
+                                            </p>
+                                            <div class="flex items-center justify-between mt-2">
+                                                <span class="text-xs text-gray-500">Il y a 30 minutes</span>
+                                                <span class="text-xs px-2 py-1 bg-orange-500 text-white rounded-full font-medium">
+                                                    Urgent
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <button onclick="markAsRead(event, 3)" class="text-gray-400 hover:text-gray-600">
+                                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Notification tâche en retard -->
+                                <div class="notification-unread p-4 hover:bg-blue-50 cursor-pointer transition border-t border-gray-100">
+                                    <div class="flex items-start gap-3">
+                                        <div class="flex-shrink-0 text-2xl">
+                                            ⚠️
+                                        </div>
+                                        <div class="flex-1 min-w-0">
+                                            <p class="text-sm font-semibold text-gray-900">
+                                                Tâche en retard
+                                            </p>
+                                            <p class="text-sm text-gray-700 mt-1">
+                                                "Tests E2E authentification" est en retard depuis 2 jours
+                                            </p>
+                                            <div class="flex items-center justify-between mt-2">
+                                                <span class="text-xs text-gray-500">Il y a 1 heure</span>
+                                                <span class="text-xs px-2 py-1 bg-red-500 text-white rounded-full font-medium">
+                                                    En retard
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <button onclick="markAsRead(event, 4)" class="text-gray-400 hover:text-gray-600">
+                                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Notification sous-tâches complétées -->
+                                <div class="notification-unread p-4 hover:bg-blue-50 cursor-pointer transition border-t border-gray-100">
+                                    <div class="flex items-start gap-3">
+                                        <div class="flex-shrink-0 text-2xl">
+                                            ☑️
+                                        </div>
+                                        <div class="flex-1 min-w-0">
+                                            <p class="text-sm font-semibold text-gray-900">
+                                                Toutes les sous-tâches terminées
+                                            </p>
+                                            <p class="text-sm text-gray-700 mt-1">
+                                                Toutes les sous-tâches de "Migration vers Laravel 12" sont terminées!
+                                            </p>
+                                            <div class="flex items-center justify-between mt-2">
+                                                <span class="text-xs text-gray-500">Il y a 2 heures</span>
+                                                <span class="text-xs px-2 py-1 bg-blue-500 text-white rounded-full font-medium">
+                                                    Nouveau
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <button onclick="markAsRead(event, 5)" class="text-gray-400 hover:text-gray-600">
+                                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Notification tâche créée -->
+                                <div class="notification-unread p-4 hover:bg-blue-50 cursor-pointer transition border-t border-gray-100">
+                                    <div class="flex items-start gap-3">
+                                        <div class="flex-shrink-0 text-2xl">
+                                            📝
+                                        </div>
+                                        <div class="flex-1 min-w-0">
+                                            <p class="text-sm font-semibold text-gray-900">
+                                                Nouvelle tâche créée
+                                            </p>
+                                            <p class="text-sm text-gray-700 mt-1">
+                                                Une nouvelle tâche "Setup CI/CD pipeline" a été créée dans Scale Theme
+                                            </p>
+                                            <div class="flex items-center justify-between mt-2">
+                                                <span class="text-xs text-gray-500">Il y a 3 heures</span>
+                                                <span class="text-xs px-2 py-1 bg-blue-500 text-white rounded-full font-medium">
+                                                    Nouveau
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <button onclick="markAsRead(event, 6)" class="text-gray-400 hover:text-gray-600">
+                                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Notification tâche complétée -->
+                                <div class="notification-unread p-4 hover:bg-blue-50 cursor-pointer transition border-t border-gray-100">
+                                    <div class="flex items-start gap-3">
+                                        <div class="flex-shrink-0 text-2xl">
+                                            ✅
+                                        </div>
+                                        <div class="flex-1 min-w-0">
+                                            <p class="text-sm font-semibold text-gray-900">
+                                                Tâche terminée
+                                            </p>
+                                            <p class="text-sm text-gray-700 mt-1">
+                                                "Optimiser les requêtes SQL" a été marquée comme terminée
+                                            </p>
+                                            <div class="flex items-center justify-between mt-2">
+                                                <span class="text-xs text-gray-500">Il y a 4 heures</span>
+                                                <span class="text-xs px-2 py-1 bg-green-500 text-white rounded-full font-medium">
+                                                    Nouveau
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <button onclick="markAsRead(event, 7)" class="text-gray-400 hover:text-gray-600">
+                                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Notifications LUES (plus transparentes) -->
+                                <div class="notification-read p-4 hover:bg-gray-50 cursor-pointer transition border-t border-gray-100">
+                                    <div class="flex items-start gap-3">
+                                        <div class="flex-shrink-0 text-2xl opacity-60">
+                                            📝
+                                        </div>
+                                        <div class="flex-1 min-w-0">
+                                            <p class="text-sm text-gray-600">
+                                                Nouvelle tâche "Refactorer le code legacy" créée
+                                            </p>
+                                            <span class="text-xs text-gray-400 mt-1 block">Il y a 1 jour</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="notification-read p-4 hover:bg-gray-50 cursor-pointer transition border-t border-gray-100">
+                                    <div class="flex items-start gap-3">
+                                        <div class="flex-shrink-0 text-2xl opacity-60">
+                                            💬
+                                        </div>
+                                        <div class="flex-1 min-w-0">
+                                            <p class="text-sm text-gray-600">
+                                                Vincent a commenté sur "Deploy en production"
+                                            </p>
+                                            <span class="text-xs text-gray-400 mt-1 block">Il y a 2 jours</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Pied avec actions -->
+                            <div class="p-3 border-t border-gray-200 flex items-center justify-between bg-gray-50">
+                                <button onclick="deleteAllRead()" class="text-sm text-red-600 hover:text-red-800 font-medium">
+                                    Supprimer les lues
+                                </button>
+                                <a href="/notifications" class="text-sm text-blue-600 hover:text-blue-800 font-medium">
+                                    Voir toutes les notifications →
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Reste de la navigation -->
+                    <div class="flex items-center gap-4">
+                        <a href="#" class="text-gray-600 hover:text-gray-900">Vincent</a>
+                        <button class="text-gray-600 hover:text-gray-900">Déconnexion</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Contenu principal -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="bg-white rounded-lg shadow-sm p-6 border-l-4 border-blue-500">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">💡 Système de Notifications - Fonctionnalités</h2>
+            <div class="grid md:grid-cols-2 gap-4 text-sm text-gray-700">
+                <div>
+                    <h3 class="font-semibold mb-2">✅ Types de notifications :</h3>
+                    <ul class="space-y-1 ml-4">
+                        <li>📝 Tâche créée</li>
+                        <li>👤 Tâche assignée</li>
+                        <li>✅ Tâche terminée</li>
+                        <li>⚠️ Tâche en retard</li>
+                        <li>⏰ Échéance proche (24h)</li>
+                        <li>💬 Nouveau commentaire</li>
+                        <li>☑️ Sous-tâches terminées</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="font-semibold mb-2">✅ Fonctionnalités :</h3>
+                    <ul class="space-y-1 ml-4">
+                        <li>🔴 Badge avec compteur non lues</li>
+                        <li>🔵 Différenciation lu/non lu</li>
+                        <li>👁️ Marquer comme lu/non lu</li>
+                        <li>✓ Tout marquer comme lu</li>
+                        <li>🗑️ Supprimer notification</li>
+                        <li>🧹 Supprimer toutes lues</li>
+                        <li>🔗 Liens directs vers tâches</li>
+                        <li>🕐 Timestamps relatifs</li>
+                        <li>📱 Responsive design</li>
+                        <li>🎨 Icônes et couleurs par type</li>
+                        <li>📜 Pagination automatique</li>
+                        <li>⚡ Mises à jour temps réel (API)</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="mt-6 p-4 bg-blue-50 rounded-lg">
+                <h3 class="font-semibold text-blue-900 mb-2">🎯 API Endpoints disponibles :</h3>
+                <div class="font-mono text-xs text-blue-800 space-y-1">
+                    <div><strong>GET</strong> /notifications - Liste paginée</div>
+                    <div><strong>GET</strong> /notifications/unread-count - Compteur</div>
+                    <div><strong>PATCH</strong> /notifications/{id}/read - Marquer lu</div>
+                    <div><strong>PATCH</strong> /notifications/{id}/unread - Marquer non lu</div>
+                    <div><strong>POST</strong> /notifications/mark-all-read - Tout marquer</div>
+                    <div><strong>DELETE</strong> /notifications/{id} - Supprimer</div>
+                    <div><strong>DELETE</strong> /notifications/delete-all-read - Supprimer lues</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let notificationCount = 7;
+
+        function toggleNotifications() {
+            const dropdown = document.getElementById('notificationDropdown');
+            dropdown.classList.toggle('hidden');
+        }
+
+        function markAsRead(event, notificationId) {
+            event.stopPropagation();
+            const notification = event.target.closest('.notification-unread');
+            if (notification) {
+                notification.classList.remove('notification-unread', 'border-l-4');
+                notification.classList.add('notification-read');
+
+                // Supprimer le badge "Nouveau"
+                const badge = notification.querySelector('.bg-blue-500, .bg-orange-500, .bg-red-500, .bg-green-500');
+                if (badge) badge.remove();
+
+                updateCount();
+            }
+        }
+
+        function markAllAsRead() {
+            const unreadNotifications = document.querySelectorAll('.notification-unread');
+            unreadNotifications.forEach(notification => {
+                notification.classList.remove('notification-unread', 'border-l-4');
+                notification.classList.add('notification-read');
+
+                const badge = notification.querySelector('.bg-blue-500, .bg-orange-500, .bg-red-500, .bg-green-500');
+                if (badge) badge.remove();
+            });
+
+            notificationCount = 0;
+            updateBadge();
+            updateHeader();
+
+            alert('Toutes les notifications ont été marquées comme lues');
+        }
+
+        function deleteAllRead() {
+            const readNotifications = document.querySelectorAll('.notification-read');
+            readNotifications.forEach(notification => notification.remove());
+
+            alert('Notifications lues supprimées');
+        }
+
+        function updateCount() {
+            notificationCount--;
+            updateBadge();
+            updateHeader();
+        }
+
+        function updateBadge() {
+            const badge = document.querySelector('.badge-pulse');
+            if (notificationCount > 0) {
+                badge.textContent = notificationCount;
+                badge.classList.remove('hidden');
+            } else {
+                badge.classList.add('hidden');
+            }
+        }
+
+        function updateHeader() {
+            const header = document.querySelector('#notificationDropdown p');
+            header.textContent = `${notificationCount} non lues`;
+        }
+
+        // Fermer le dropdown quand on clique ailleurs
+        document.addEventListener('click', function(event) {
+            const dropdown = document.getElementById('notificationDropdown');
+            const button = document.getElementById('notificationButton');
+
+            if (!button.contains(event.target) && !dropdown.contains(event.target)) {
+                dropdown.classList.add('hidden');
+            }
+        });
+    </script>
+</body>
+</html>
