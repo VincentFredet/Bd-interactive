@@ -127,6 +127,13 @@
                                                 @if($task->context)
                                                     <span class="px-2 py-1 rounded {{ $task->context->badge_class }}">{{ $task->context->name }}</span>
                                                 @endif
+                                                @if($task->categories && $task->categories->isNotEmpty())
+                                                    <div class="flex flex-wrap gap-1">
+                                                        @foreach($task->categories as $category)
+                                                            <span class="px-2 py-1 text-xs rounded {{ $category->badge_class }}">{{ $category->name }}</span>
+                                                        @endforeach
+                                                    </div>
+                                                @endif
                                                 @if($task->user)
                                                     <span>{{ $task->user->name }}</span>
                                                 @endif
@@ -198,6 +205,13 @@
                                                 <div class="flex items-center space-x-4 text-sm text-gray-500">
                                                     @if($task->context)
                                                         <span class="px-2 py-1 rounded {{ $task->context->badge_class }}">{{ $task->context->name }}</span>
+                                                    @endif
+                                                    @if($task->categories && $task->categories->isNotEmpty())
+                                                        <div class="flex flex-wrap gap-1">
+                                                            @foreach($task->categories as $category)
+                                                                <span class="px-2 py-1 text-xs rounded {{ $category->badge_class }}">{{ $category->name }}</span>
+                                                            @endforeach
+                                                        </div>
                                                     @endif
                                                     @if($task->user)
                                                         <span>Assigné à: {{ $task->user->name }}</span>

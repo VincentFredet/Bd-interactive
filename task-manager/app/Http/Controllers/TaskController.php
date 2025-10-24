@@ -19,11 +19,11 @@ class TaskController extends Controller
     public function index(Request $request)
     {
         // Déterminer la semaine à afficher
-        $weekStart = $request->has('week') 
+        $weekStart = $request->has('week')
             ? Carbon::parse($request->week)->startOfWeek(Carbon::MONDAY)
             : Task::getWeekStart();
-        
-        $query = Task::with(['context', 'user']);
+
+        $query = Task::with(['context', 'user', 'categories']);
         
         // Filtrer par semaine
         $query->forWeek($weekStart);
@@ -79,8 +79,9 @@ class TaskController extends Controller
     {
         $contexts = Context::all();
         $users = User::all();
-        
-        return view('tasks.create', compact('contexts', 'users'));
+        $categories = \App\Models\Category::all();
+
+        return view('tasks.create', compact('contexts', 'users', 'categories'));
     }
 
     /**
@@ -104,7 +105,12 @@ class TaskController extends Controller
             $validated['image'] = $imageName;
         }
 
-        Task::create($validated);
+        $task = Task::create($validated);
+
+        // Synchroniser les catégories
+        if ($request->has('categories')) {
+            $task->categories()->sync($request->categories);
+        }
 
         return redirect()->route('tasks.index')->with('success', 'Tâche créée avec succès!');
     }
@@ -125,8 +131,10 @@ class TaskController extends Controller
     {
         $contexts = Context::all();
         $users = User::all();
-        
-        return view('tasks.edit', compact('task', 'contexts', 'users'));
+        $categories = \App\Models\Category::all();
+        $task->load('categories');
+
+        return view('tasks.edit', compact('task', 'contexts', 'users', 'categories'));
     }
 
     /**
@@ -153,6 +161,13 @@ class TaskController extends Controller
         }
 
         $task->update($validated);
+
+        // Synchroniser les catégories
+        if ($request->has('categories')) {
+            $task->categories()->sync($request->categories);
+        } else {
+            $task->categories()->detach();
+        }
 
         return redirect()->route('tasks.index')->with('success', 'Tâche mise à jour avec succès!');
     }
@@ -221,11 +236,11 @@ class TaskController extends Controller
     public function daily(Request $request)
     {
         // Déterminer le jour à afficher
-        $currentDate = $request->has('date') 
+        $currentDate = $request->has('date')
             ? Carbon::parse($request->date)
             : Carbon::today();
-        
-        $query = Task::with(['context', 'user']);
+
+        $query = Task::with(['context', 'user', 'categories']);
         
         // Filtrer par date d'échéance
         $query->forDate($currentDate);
@@ -242,7 +257,7 @@ class TaskController extends Controller
         // Tâches en retard (seulement si on regarde aujourd'hui)
         $overdueTasks = collect();
         if ($currentDate->isToday()) {
-            $overdueTasks = Task::with(['context', 'user'])
+            $overdueTasks = Task::with(['context', 'user', 'categories'])
                                ->overdue()
                                ->orderBy('due_date', 'asc')
                                ->get();

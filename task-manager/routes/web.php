@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ContextController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProfileController;
@@ -29,6 +30,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     
     // Contexts routes
     Route::resource('contexts', ContextController::class);
+
+    // Categories routes
+    Route::resource('categories', CategoryController::class);
 
     // Subtasks routes
     Route::post('/tasks/{task}/subtasks', [SubtaskController::class, 'store'])->name('subtasks.store');
