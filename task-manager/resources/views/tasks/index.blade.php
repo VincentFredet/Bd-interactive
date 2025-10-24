@@ -198,9 +198,9 @@
                 </div>
             </div>
 
-            <!-- Liste des tâches -->
+            <!-- Grille hebdomadaire (7 jours) -->
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 bg-white border-b border-gray-200">
+                <div class="p-6">
                     @if($tasks->isEmpty())
                         <div class="text-center py-8">
                             <p class="text-gray-500 text-lg">Aucune tâche trouvée.</p>
@@ -209,68 +209,80 @@
                             </a>
                         </div>
                     @else
-                        <div class="grid gap-4">
-                            @foreach($tasks as $task)
-                                <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow {{ $task->context ? $task->context->border_class : '' }}">
-                                    <div class="flex items-start justify-between">
-                                        <div class="flex-1">
-                                            <div class="flex items-center space-x-2 mb-2">
-                                                <h3 class="text-lg font-semibold text-gray-900">{{ $task->title }}</h3>
-                                                <span class="px-2 py-1 text-xs font-medium rounded-full {{ $task->priority_badge_class }}">
-                                                    {{ ucfirst($task->priority) }}
-                                                </span>
-                                            </div>
-                                            
-                                            @if($task->description)
-                                                <p class="text-gray-600 mb-2">{{ Str::limit($task->description, 100) }}</p>
-                                            @endif
-                                            
-                                            <div class="flex items-center space-x-4 text-sm text-gray-500">
-                                                @if($task->context)
-                                                    <span class="px-2 py-1 rounded {{ $task->context->badge_class }}">{{ $task->context->name }}</span>
-                                                @endif
-                                                @if($task->categories && $task->categories->isNotEmpty())
-                                                    <div class="flex flex-wrap gap-1">
-                                                        @foreach($task->categories as $category)
-                                                            <span class="px-2 py-1 text-xs rounded {{ $category->badge_class }}">{{ $category->name }}</span>
-                                                        @endforeach
-                                                    </div>
-                                                @endif
-                                                @if($task->user)
-                                                    <span>Assigné à: {{ $task->user->name }}</span>
-                                                @endif
-                                                <span>{{ $task->created_at->format('d/m/Y') }}</span>
-                                            </div>
+                        <!-- Grille de 7 colonnes -->
+                        <div class="grid grid-cols-7 gap-4">
+                            @foreach($weekDays as $dateKey => $dayData)
+                                <div class="flex flex-col">
+                                    <!-- En-tête du jour -->
+                                    <div class="mb-3 text-center sticky top-0 bg-white z-10 pb-2">
+                                        <div class="font-semibold text-gray-900 {{ $dayData['is_today'] ? 'text-blue-600' : '' }}">
+                                            {{ $dayData['short_label'] }}
                                         </div>
-                                        
-                                        <div class="flex items-center space-x-2 ml-4">
-                                            @if($task->image)
-                                                <img src="{{ Storage::url('tasks/' . $task->image) }}" 
-                                                     alt="Image de la tâche" 
-                                                     class="w-16 h-16 object-cover rounded">
-                                            @endif
-                                            
-                                            <div class="flex flex-col space-y-2">
-                                                <select onchange="updateTaskStatus({{ $task->id }}, this.value)" 
-                                                        class="text-sm border-gray-300 rounded-md">
-                                                    <option value="todo" {{ $task->status === 'todo' ? 'selected' : '' }}>À faire</option>
-                                                    <option value="in_progress" {{ $task->status === 'in_progress' ? 'selected' : '' }}>En cours</option>
-                                                    <option value="done" {{ $task->status === 'done' ? 'selected' : '' }}>Terminé</option>
-                                                </select>
-                                                
-                                                <div class="flex space-x-1">
-                                                    <a href="{{ route('tasks.edit', $task) }}" 
-                                                       class="text-blue-600 hover:text-blue-900 text-sm">Modifier</a>
-                                                    <form action="{{ route('tasks.destroy', $task) }}" method="POST" class="inline">
-                                                        @csrf
-                                                        @method('DELETE')
-                                                        <button type="submit" 
-                                                                onclick="return confirm('Êtes-vous sûr de vouloir supprimer cette tâche ?')"
-                                                                class="text-red-600 hover:text-red-900 text-sm">Supprimer</button>
-                                                    </form>
+                                        <div class="text-2xl font-bold {{ $dayData['is_today'] ? 'text-blue-600' : 'text-gray-400' }}">
+                                            {{ $dayData['day_number'] }}
+                                        </div>
+                                    </div>
+
+                                    <!-- Zone de drop pour ce jour -->
+                                    <div class="day-column min-h-[400px] bg-gray-50 rounded-lg p-2 space-y-2"
+                                         data-date="{{ $dateKey }}"
+                                         ondragover="handleDragOver(event)"
+                                         ondrop="handleDrop(event)"
+                                         ondragleave="handleDragLeave(event)">
+
+                                        @forelse($dayData['tasks'] as $task)
+                                            <!-- Carte de tâche draggable -->
+                                            <div class="task-card bg-white border-l-4 {{ $task->context ? $task->context->border_class : 'border-l-4 border-gray-500' }} rounded-lg p-3 shadow-sm hover:shadow-md transition-all cursor-move"
+                                                 draggable="true"
+                                                 data-task-id="{{ $task->id }}"
+                                                 ondragstart="handleDragStart(event)"
+                                                 ondragend="handleDragEnd(event)"
+                                                 onclick="openQuickEdit({{ $task->id }})">
+
+                                                <!-- Titre et priorité -->
+                                                <div class="flex items-start justify-between mb-2">
+                                                    <h4 class="font-semibold text-sm text-gray-900 line-clamp-2 flex-1">
+                                                        {{ $task->title }}
+                                                    </h4>
+                                                    <span class="ml-1 px-1.5 py-0.5 text-xs rounded-full {{ $task->priority_badge_class }} flex-shrink-0">
+                                                        {{ substr(ucfirst($task->priority), 0, 1) }}
+                                                    </span>
+                                                </div>
+
+                                                <!-- Contexte et catégories -->
+                                                <div class="flex flex-wrap gap-1 mb-2">
+                                                    @if($task->context)
+                                                        <span class="px-1.5 py-0.5 text-xs rounded {{ $task->context->badge_class }}">
+                                                            {{ $task->context->name }}
+                                                        </span>
+                                                    @endif
+                                                    @if($task->categories && $task->categories->isNotEmpty())
+                                                        @foreach($task->categories->take(2) as $category)
+                                                            <span class="px-1.5 py-0.5 text-xs rounded {{ $category->badge_class }}">
+                                                                {{ $category->name }}
+                                                            </span>
+                                                        @endforeach
+                                                    @endif
+                                                </div>
+
+                                                <!-- Statut -->
+                                                <div class="flex items-center justify-between text-xs">
+                                                    <span class="px-2 py-0.5 rounded {{ $task->status_badge_class }}">
+                                                        @if($task->status === 'todo') À faire
+                                                        @elseif($task->status === 'in_progress') En cours
+                                                        @else Terminé
+                                                        @endif
+                                                    </span>
+                                                    @if($task->user)
+                                                        <span class="text-gray-500 truncate ml-1">{{ substr($task->user->name, 0, 10) }}</span>
+                                                    @endif
                                                 </div>
                                             </div>
-                                        </div>
+                                        @empty
+                                            <div class="text-center text-gray-400 text-sm py-4">
+                                                Aucune tâche
+                                            </div>
+                                        @endforelse
                                     </div>
                                 </div>
                             @endforeach
@@ -282,6 +294,7 @@
     </div>
 
     <script>
+        // Mise à jour du statut de tâche
         function updateTaskStatus(taskId, status) {
             fetch(`/tasks/${taskId}/status`, {
                 method: 'PATCH',
@@ -294,15 +307,110 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    // Optionnel: afficher un message de succès
                     console.log('Statut mis à jour avec succès');
                 }
             })
             .catch(error => {
                 console.error('Erreur:', error);
-                // Recharger la page en cas d'erreur
                 location.reload();
             });
+        }
+
+        // Variables globales pour le drag & drop
+        let draggedElement = null;
+        let draggedTaskId = null;
+
+        // Début du drag
+        function handleDragStart(e) {
+            draggedElement = e.currentTarget;
+            draggedTaskId = e.currentTarget.getAttribute('data-task-id');
+            e.currentTarget.style.opacity = '0.5';
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/html', e.currentTarget.innerHTML);
+        }
+
+        // Fin du drag
+        function handleDragEnd(e) {
+            e.currentTarget.style.opacity = '1';
+            // Retirer les highlights
+            document.querySelectorAll('.day-column').forEach(col => {
+                col.classList.remove('bg-blue-100', 'border-2', 'border-blue-400', 'border-dashed');
+            });
+        }
+
+        // Drag over une zone
+        function handleDragOver(e) {
+            if (e.preventDefault) {
+                e.preventDefault();
+            }
+            e.dataTransfer.dropEffect = 'move';
+
+            // Highlight la colonne
+            const column = e.currentTarget;
+            if (column.classList.contains('day-column')) {
+                column.classList.add('bg-blue-100', 'border-2', 'border-blue-400', 'border-dashed');
+            }
+            return false;
+        }
+
+        // Quitter la zone de drag
+        function handleDragLeave(e) {
+            const column = e.currentTarget;
+            if (column.classList.contains('day-column')) {
+                column.classList.remove('bg-blue-100', 'border-2', 'border-blue-400', 'border-dashed');
+            }
+        }
+
+        // Drop sur une colonne
+        function handleDrop(e) {
+            if (e.stopPropagation) {
+                e.stopPropagation();
+            }
+
+            const column = e.currentTarget;
+            column.classList.remove('bg-blue-100', 'border-2', 'border-blue-400', 'border-dashed');
+
+            const newDate = column.getAttribute('data-date');
+
+            if (draggedElement && draggedTaskId) {
+                // Mise à jour via AJAX
+                updateTaskDate(draggedTaskId, newDate);
+            }
+
+            return false;
+        }
+
+        // Mise à jour de la date d'une tâche
+        function updateTaskDate(taskId, newDate) {
+            fetch(`/tasks/${taskId}/due-date`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                },
+                body: JSON.stringify({ due_date: newDate })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    console.log('Date mise à jour avec succès');
+                    // Recharger la page pour voir les changements
+                    location.reload();
+                } else {
+                    alert('Erreur lors de la mise à jour de la date');
+                }
+            })
+            .catch(error => {
+                console.error('Erreur:', error);
+                alert('Erreur lors de la mise à jour de la date');
+            });
+        }
+
+        // Édition rapide d'une tâche (clic)
+        function openQuickEdit(taskId) {
+            // Pour l'instant, on redirige vers la page d'édition
+            // TODO: Implémenter un modal d'édition rapide plus tard
+            window.location.href = `/tasks/${taskId}/edit`;
         }
     </script>
 </x-app-layout>

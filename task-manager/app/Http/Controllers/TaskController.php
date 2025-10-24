@@ -59,6 +59,22 @@ class TaskController extends Controller
                       ->orderBy('created_at', 'desc')
                       ->get();
 
+        // Grouper les tâches par jour de la semaine
+        $weekDays = [];
+        for ($i = 0; $i < 7; $i++) {
+            $day = $weekStart->copy()->addDays($i);
+            $weekDays[$day->format('Y-m-d')] = [
+                'date' => $day,
+                'label' => ucfirst($day->translatedFormat('l')),
+                'short_label' => ucfirst($day->translatedFormat('D')),
+                'day_number' => $day->format('d'),
+                'is_today' => $day->isToday(),
+                'tasks' => $tasks->filter(function($task) use ($day) {
+                    return $task->due_date && $task->due_date->isSameDay($day);
+                })->values()
+            ];
+        }
+
         $contexts = Context::all();
         $categories = \App\Models\Category::all();
         $users = User::all();
@@ -84,6 +100,7 @@ class TaskController extends Controller
         
         return view('tasks.index', compact(
             'tasks',
+            'weekDays',
             'contexts',
             'categories',
             'users',
@@ -249,6 +266,46 @@ class TaskController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Erreur lors de la mise à jour du statut',
+                'error' => config('app.debug') ? $e->getMessage() : 'Une erreur est survenue',
+            ], 500);
+        }
+    }
+
+    /**
+     * Update task due date via AJAX (for drag & drop)
+     */
+    public function updateDueDate(Request $request, Task $task)
+    {
+        try {
+            $validated = $request->validate([
+                'due_date' => 'required|date',
+            ]);
+
+            $task->update(['due_date' => $validated['due_date']]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Date mise à jour avec succès',
+                'task' => [
+                    'id' => $task->id,
+                    'due_date' => $task->due_date->format('Y-m-d'),
+                ],
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Données invalides',
+                'errors' => $e->errors(),
+            ], 422);
+        } catch (\Exception $e) {
+            \Log::error('Error updating task due date', [
+                'task_id' => $task->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de la mise à jour de la date',
                 'error' => config('app.debug') ? $e->getMessage() : 'Une erreur est survenue',
             ], 500);
         }

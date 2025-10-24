@@ -22,7 +22,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Tasks routes
     Route::resource('tasks', TaskController::class);
     Route::patch('/tasks/{task}/status', [TaskController::class, 'updateStatus'])->name('tasks.update-status');
-    
+    Route::patch('/tasks/{task}/due-date', [TaskController::class, 'updateDueDate'])->name('tasks.update-due-date');
+
     // Daily task management
     Route::get('/daily', [TaskController::class, 'daily'])->name('tasks.daily');
     Route::patch('/tasks/{task}/complete', [TaskController::class, 'complete'])->name('tasks.complete');
