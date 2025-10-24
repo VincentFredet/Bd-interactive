@@ -27,17 +27,40 @@ class TaskController extends Controller
         
         // Filtrer par semaine
         $query->forWeek($weekStart);
-        
+
         // Filtrer par contexte si spécifié
         if ($request->has('context') && $request->context !== '') {
             $query->where('context_id', $request->context);
         }
-        
+
+        // Filtrer par catégorie si spécifiée
+        if ($request->has('category') && $request->category !== '') {
+            $query->whereHas('categories', function($q) use ($request) {
+                $q->where('categories.id', $request->category);
+            });
+        }
+
+        // Filtrer par priorité si spécifiée
+        if ($request->has('priority') && $request->priority !== '') {
+            $query->where('priority', $request->priority);
+        }
+
+        // Filtrer par statut si spécifié
+        if ($request->has('status') && $request->status !== '') {
+            $query->where('status', $request->status);
+        }
+
+        // Filtrer par utilisateur si spécifié
+        if ($request->has('user') && $request->user !== '') {
+            $query->where('user_id', $request->user);
+        }
+
         $tasks = $query->orderBy('priority', 'desc')
                       ->orderBy('created_at', 'desc')
                       ->get();
-        
+
         $contexts = Context::all();
+        $categories = \App\Models\Category::all();
         $users = User::all();
         
         // Calculer les semaines pour la navigation
@@ -60,12 +83,13 @@ class TaskController extends Controller
         ];
         
         return view('tasks.index', compact(
-            'tasks', 
-            'contexts', 
-            'users', 
-            'weekStart', 
-            'previousWeek', 
-            'nextWeek', 
+            'tasks',
+            'contexts',
+            'categories',
+            'users',
+            'weekStart',
+            'previousWeek',
+            'nextWeek',
             'currentWeek',
             'weekLabel',
             'weekStats'
@@ -244,16 +268,38 @@ class TaskController extends Controller
         
         // Filtrer par date d'échéance
         $query->forDate($currentDate);
-        
+
         // Filtrer par contexte si spécifié
         if ($request->has('context') && $request->context !== '') {
             $query->where('context_id', $request->context);
         }
-        
+
+        // Filtrer par catégorie si spécifiée
+        if ($request->has('category') && $request->category !== '') {
+            $query->whereHas('categories', function($q) use ($request) {
+                $q->where('categories.id', $request->category);
+            });
+        }
+
+        // Filtrer par priorité si spécifiée
+        if ($request->has('priority') && $request->priority !== '') {
+            $query->where('priority', $request->priority);
+        }
+
+        // Filtrer par statut si spécifié
+        if ($request->has('status') && $request->status !== '') {
+            $query->where('status', $request->status);
+        }
+
+        // Filtrer par utilisateur si spécifié
+        if ($request->has('user') && $request->user !== '') {
+            $query->where('user_id', $request->user);
+        }
+
         $tasks = $query->orderBy('priority', 'desc')
                       ->orderBy('created_at', 'desc')
                       ->get();
-        
+
         // Tâches en retard (seulement si on regarde aujourd'hui)
         $overdueTasks = collect();
         if ($currentDate->isToday()) {
@@ -262,8 +308,9 @@ class TaskController extends Controller
                                ->orderBy('due_date', 'asc')
                                ->get();
         }
-        
+
         $contexts = Context::all();
+        $categories = \App\Models\Category::all();
         $users = User::all();
         
         // Navigation par jour
@@ -286,10 +333,11 @@ class TaskController extends Controller
         ];
         
         return view('tasks.daily', compact(
-            'tasks', 
+            'tasks',
             'overdueTasks',
-            'contexts', 
-            'users', 
+            'contexts',
+            'categories',
+            'users',
             'currentDate', 
             'previousDay', 
             'nextDay', 
