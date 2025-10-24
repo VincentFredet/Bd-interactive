@@ -90,13 +90,13 @@
                 <div class="p-6 bg-white border-b border-gray-200">
                     <h3 class="text-lg font-medium text-gray-900 mb-4">Filtrer par contexte</h3>
                     <div class="flex flex-wrap gap-2">
-                        <a href="{{ route('tasks.daily', array_merge(request()->except('context'), ['date' => $currentDate->format('Y-m-d')])) }}" 
-                           class="px-4 py-2 rounded-full text-sm font-medium {{ !request('context') ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300' }}">
+                        <a href="{{ route('tasks.daily', array_merge(request()->except('context'), ['date' => $currentDate->format('Y-m-d')])) }}"
+                           class="px-4 py-2 rounded-full text-sm font-medium {{ !request('context') ? 'bg-blue-500 text-white hover:bg-blue-700' : 'bg-gray-200 text-gray-700 hover:bg-gray-300' }}">
                             Tous
                         </a>
                         @foreach($contexts as $context)
-                            <a href="{{ route('tasks.daily', array_merge(request()->query(), ['context' => $context->id, 'date' => $currentDate->format('Y-m-d')])) }}" 
-                               class="px-4 py-2 rounded-full text-sm font-medium {{ request('context') == $context->id ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300' }}">
+                            <a href="{{ route('tasks.daily', array_merge(request()->query(), ['context' => $context->id, 'date' => $currentDate->format('Y-m-d')])) }}"
+                               class="px-4 py-2 rounded-full text-sm font-medium text-white {{ request('context') == $context->id ? $context->button_active_class : $context->button_inactive_class }}">
                                 {{ $context->name }}
                             </a>
                         @endforeach
@@ -111,7 +111,7 @@
                         <h3 class="text-lg font-medium text-red-900 mb-4">⚠️ Tâches en retard</h3>
                         <div class="grid gap-3">
                             @foreach($overdueTasks as $task)
-                                <div class="bg-white border border-red-200 rounded-lg p-4">
+                                <div class="bg-white border border-red-200 rounded-lg p-4 {{ $task->context ? $task->context->border_class : '' }}">
                                     <div class="flex items-center justify-between">
                                         <div class="flex-1">
                                             <div class="flex items-center space-x-2 mb-2">
@@ -125,7 +125,7 @@
                                             </div>
                                             <div class="flex items-center space-x-4 text-sm text-gray-500">
                                                 @if($task->context)
-                                                    <span class="bg-gray-100 px-2 py-1 rounded">{{ $task->context->name }}</span>
+                                                    <span class="px-2 py-1 rounded {{ $task->context->badge_class }}">{{ $task->context->name }}</span>
                                                 @endif
                                                 @if($task->user)
                                                     <span>{{ $task->user->name }}</span>
@@ -169,7 +169,7 @@
                     @else
                         <div class="grid gap-4">
                             @foreach($tasks as $task)
-                                <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow task-item" data-task-id="{{ $task->id }}">
+                                <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow task-item {{ $task->context ? $task->context->border_class : '' }}" data-task-id="{{ $task->id }}">
                                     <div class="flex items-start justify-between">
                                         <div class="flex items-start space-x-3 flex-1">
                                             <!-- Checkbox pour cocher rapidement -->
@@ -197,7 +197,7 @@
                                                 
                                                 <div class="flex items-center space-x-4 text-sm text-gray-500">
                                                     @if($task->context)
-                                                        <span class="bg-gray-100 px-2 py-1 rounded">{{ $task->context->name }}</span>
+                                                        <span class="px-2 py-1 rounded {{ $task->context->badge_class }}">{{ $task->context->name }}</span>
                                                     @endif
                                                     @if($task->user)
                                                         <span>Assigné à: {{ $task->user->name }}</span>

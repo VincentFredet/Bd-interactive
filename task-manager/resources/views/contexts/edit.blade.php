@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Créer un nouveau contexte') }}
+            {{ __('Modifier le contexte') }}
         </h2>
     </x-slot>
 
@@ -9,14 +9,15 @@
         <div class="max-w-2xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 bg-white border-b border-gray-200">
-                    <form action="{{ route('contexts.store') }}" method="POST">
+                    <form action="{{ route('contexts.update', $context) }}" method="POST">
                         @csrf
-                        
+                        @method('PATCH')
+
                         <div class="mb-4">
                             <label for="name" class="block text-sm font-medium text-gray-700">Nom du contexte *</label>
                             <input type="text" name="name" id="name" required
                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-                                   value="{{ old('name') }}"
+                                   value="{{ old('name', $context->name) }}"
                                    placeholder="Ex: Scale Theme, Tap It, Vidéos Milo...">
                             @error('name')
                                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -29,7 +30,7 @@
                                 @foreach($colors as $colorKey => $colorName)
                                     <label class="relative cursor-pointer group">
                                         <input type="radio" name="color" value="{{ $colorKey }}"
-                                               {{ old('color', 'gray') == $colorKey ? 'checked' : '' }}
+                                               {{ old('color', $context->color) == $colorKey ? 'checked' : '' }}
                                                class="sr-only peer" required>
                                         <div class="flex flex-col items-center p-3 rounded-lg border-2 border-gray-200
                                                     peer-checked:border-{{ $colorKey }}-500 peer-checked:ring-2 peer-checked:ring-{{ $colorKey }}-200
@@ -46,13 +47,13 @@
                         </div>
 
                         <div class="flex items-center justify-end space-x-2">
-                            <a href="{{ route('tasks.index') }}" 
+                            <a href="{{ route('contexts.index') }}"
                                class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">
                                 Annuler
                             </a>
-                            <button type="submit" 
-                                    class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
-                                Créer le contexte
+                            <button type="submit"
+                                    class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                                Mettre à jour
                             </button>
                         </div>
                     </form>
