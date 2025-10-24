@@ -214,12 +214,23 @@
                             @foreach($weekDays as $dateKey => $dayData)
                                 <div class="flex flex-col">
                                     <!-- En-tête du jour -->
-                                    <div class="mb-3 text-center sticky top-0 bg-white z-10 pb-2">
-                                        <div class="font-semibold text-gray-900 {{ $dayData['is_today'] ? 'text-blue-600' : '' }}">
-                                            {{ $dayData['short_label'] }}
-                                        </div>
-                                        <div class="text-2xl font-bold {{ $dayData['is_today'] ? 'text-blue-600' : 'text-gray-400' }}">
-                                            {{ $dayData['day_number'] }}
+                                    <div class="mb-3 sticky top-0 bg-white z-10 pb-2">
+                                        <div class="flex items-center justify-between px-2">
+                                            <div class="text-center flex-1">
+                                                <div class="font-semibold text-gray-900 {{ $dayData['is_today'] ? 'text-blue-600' : '' }}">
+                                                    {{ $dayData['short_label'] }}
+                                                </div>
+                                                <div class="text-2xl font-bold {{ $dayData['is_today'] ? 'text-blue-600' : 'text-gray-400' }}">
+                                                    {{ $dayData['day_number'] }}
+                                                </div>
+                                            </div>
+                                            <button onclick="openQuickCreate('{{ $dateKey }}')"
+                                                    class="flex-shrink-0 w-7 h-7 rounded-full bg-blue-500 hover:bg-blue-600 text-white flex items-center justify-center transition-colors"
+                                                    title="Créer une tâche">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                                                </svg>
+                                            </button>
                                         </div>
                                     </div>
 
@@ -290,6 +301,95 @@
                     @endif
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- Modal de création rapide de tâche -->
+    <div id="quick-create-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+        <div class="relative top-20 mx-auto p-5 border w-full max-w-md shadow-lg rounded-md bg-white">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-medium text-gray-900">Créer une tâche rapide</h3>
+                <button onclick="closeQuickCreate()" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <form id="quick-create-form" action="{{ route('tasks.store') }}" method="POST">
+                @csrf
+                <input type="hidden" name="due_date" id="quick-due-date">
+
+                <div class="mb-4">
+                    <label for="quick-title" class="block text-sm font-medium text-gray-700 mb-1">Titre *</label>
+                    <input type="text" name="title" id="quick-title" required
+                           class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                           placeholder="Nom de la tâche">
+                </div>
+
+                <div class="mb-4">
+                    <label for="quick-description" class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                    <textarea name="description" id="quick-description" rows="3"
+                              class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                              placeholder="Détails optionnels..."></textarea>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label for="quick-priority" class="block text-sm font-medium text-gray-700 mb-1">Priorité</label>
+                        <select name="priority" id="quick-priority"
+                                class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                            <option value="low">Basse</option>
+                            <option value="medium" selected>Moyenne</option>
+                            <option value="high">Haute</option>
+                            <option value="urgent">Urgente</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="quick-status" class="block text-sm font-medium text-gray-700 mb-1">Statut</label>
+                        <select name="status" id="quick-status"
+                                class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                            <option value="todo" selected>À faire</option>
+                            <option value="in_progress">En cours</option>
+                            <option value="done">Terminé</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label for="quick-context" class="block text-sm font-medium text-gray-700 mb-1">Contexte</label>
+                    <select name="context_id" id="quick-context"
+                            class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                        <option value="">Aucun contexte</option>
+                        @foreach($contexts as $context)
+                            <option value="{{ $context->id }}">{{ $context->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div class="mb-4">
+                    <label for="quick-user" class="block text-sm font-medium text-gray-700 mb-1">Assigner à</label>
+                    <select name="user_id" id="quick-user"
+                            class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                        <option value="">Non assigné</option>
+                        @foreach($users as $user)
+                            <option value="{{ $user->id }}">{{ $user->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div class="flex justify-end space-x-2">
+                    <button type="button" onclick="closeQuickCreate()"
+                            class="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600">
+                        Annuler
+                    </button>
+                    <button type="submit"
+                            class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+                        Créer la tâche
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -412,5 +512,36 @@
             // TODO: Implémenter un modal d'édition rapide plus tard
             window.location.href = `/tasks/${taskId}/edit`;
         }
+
+        // Ouvrir le modal de création rapide
+        function openQuickCreate(date) {
+            // Pre-remplir la date avec le jour sélectionné
+            document.getElementById('quick-due-date').value = date;
+            // Réinitialiser les autres champs
+            document.getElementById('quick-create-form').reset();
+            // Re-définir la date après le reset
+            document.getElementById('quick-due-date').value = date;
+            // Afficher le modal
+            document.getElementById('quick-create-modal').classList.remove('hidden');
+            // Focus sur le champ titre
+            setTimeout(() => {
+                document.getElementById('quick-title').focus();
+            }, 100);
+        }
+
+        // Fermer le modal de création rapide
+        function closeQuickCreate() {
+            // Masquer le modal
+            document.getElementById('quick-create-modal').classList.add('hidden');
+            // Réinitialiser le formulaire
+            document.getElementById('quick-create-form').reset();
+        }
+
+        // Fermer le modal en cliquant à l'extérieur
+        document.getElementById('quick-create-modal')?.addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeQuickCreate();
+            }
+        });
     </script>
 </x-app-layout>
