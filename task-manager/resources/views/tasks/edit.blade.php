@@ -195,8 +195,82 @@
                     </form>
                 </div>
             </div>
+
+            <!-- Galerie d'images multiples -->
+            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg mt-6">
+                <div class="p-6 bg-white border-b border-gray-200">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">📸 Galerie d'images</h3>
+
+                    <!-- Images existantes -->
+                    @if($task->images && $task->images->isNotEmpty())
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                            @foreach($task->images as $image)
+                                <div class="relative group">
+                                    <img src="{{ $image->url }}" alt="{{ $image->original_name }}"
+                                         class="w-full h-32 object-cover rounded-lg shadow">
+                                    <button type="button"
+                                            onclick="deleteImage({{ $image->id }})"
+                                            class="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                                            title="Supprimer">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                        </svg>
+                                    </button>
+                                    <div class="text-xs text-gray-500 mt-1 truncate" title="{{ $image->original_name }}">
+                                        {{ $image->original_name }}
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    @else
+                        <p class="text-gray-500 text-sm mb-4">Aucune image dans la galerie</p>
+                    @endif
+
+                    <!-- Formulaire d'upload multiple -->
+                    <form action="{{ route('task-images.store', $task) }}" method="POST" enctype="multipart/form-data" id="images-upload-form">
+                        @csrf
+                        <div class="flex items-center space-x-4">
+                            <input type="file" name="images[]" id="images" multiple accept="image/*"
+                                   class="flex-1 border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                            <button type="submit"
+                                    class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded whitespace-nowrap">
+                                ➕ Ajouter
+                            </button>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-2">Vous pouvez sélectionner plusieurs images à la fois (max 5 Mo chacune)</p>
+                    </form>
+                </div>
+            </div>
         </div>
     </div>
+
+    <script>
+        function deleteImage(imageId) {
+            if (!confirm('Êtes-vous sûr de vouloir supprimer cette image ?')) {
+                return;
+            }
+
+            fetch(`/task-images/${imageId}`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Erreur lors de la suppression');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Erreur lors de la suppression');
+            });
+        }
+    </script>
 
     <script>
         function previewImage(input) {

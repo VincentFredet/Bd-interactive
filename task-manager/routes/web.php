@@ -7,6 +7,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SubtaskController;
 use App\Http\Controllers\TaskCommentController;
 use App\Http\Controllers\TaskController;
+use App\Http\Controllers\TaskImageController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -47,6 +48,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/tasks/{task}/comments', [TaskCommentController::class, 'store'])->name('task-comments.store');
     Route::patch('/comments/{comment}', [TaskCommentController::class, 'update'])->name('task-comments.update');
     Route::delete('/comments/{comment}', [TaskCommentController::class, 'destroy'])->name('task-comments.destroy');
+
+    // Task images routes
+    Route::post('/tasks/{task}/images', [TaskImageController::class, 'store'])->name('task-images.store');
+    Route::delete('/task-images/{image}', [TaskImageController::class, 'destroy'])->name('task-images.destroy');
+    Route::post('/tasks/{task}/images/reorder', [TaskImageController::class, 'reorder'])->name('task-images.reorder');
 
     // Notifications routes
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');

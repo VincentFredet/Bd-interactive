@@ -193,7 +193,7 @@ class TaskController extends Controller
         $contexts = Context::all();
         $users = User::all();
         $categories = \App\Models\Category::all();
-        $task->load('categories');
+        $task->load('categories', 'images');
 
         return view('tasks.edit', compact('task', 'contexts', 'users', 'categories'));
     }

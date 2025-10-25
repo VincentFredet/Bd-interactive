@@ -80,6 +80,14 @@ class Task extends Model
         return $this->hasMany(Task::class, 'recurrence_parent_id');
     }
 
+    /**
+     * Get all images for this task
+     */
+    public function images(): HasMany
+    {
+        return $this->hasMany(TaskImage::class)->orderBy('order');
+    }
+
     public function getImageUrlAttribute(): ?string
     {
         return $this->image ? Storage::url('tasks/' . $this->image) : null;
