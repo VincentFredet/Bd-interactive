@@ -159,10 +159,65 @@
                                 @error('image')
                                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                                 @enderror
-                                
+
                                 <!-- Prévisualisation de l'image -->
                                 <div id="image-preview" class="mt-2 hidden">
                                     <img id="preview-img" src="" alt="Prévisualisation" class="max-w-xs h-32 object-cover rounded">
+                                </div>
+                            </div>
+
+                            <!-- Récurrence -->
+                            <div class="md:col-span-2 border-t pt-4 mt-4">
+                                <div class="flex items-center mb-4">
+                                    <input type="checkbox" name="is_recurring" id="is_recurring" value="1"
+                                           {{ old('is_recurring') ? 'checked' : '' }}
+                                           onchange="toggleRecurrence()"
+                                           class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                                    <label for="is_recurring" class="ml-2 block text-sm font-medium text-gray-700">
+                                        🔄 Tâche récurrente
+                                    </label>
+                                </div>
+
+                                <div id="recurrence-options" class="hidden space-y-4 pl-6 border-l-2 border-indigo-200">
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <!-- Type de récurrence -->
+                                        <div>
+                                            <label for="recurrence_type" class="block text-sm font-medium text-gray-700">Fréquence</label>
+                                            <select name="recurrence_type" id="recurrence_type"
+                                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                                                <option value="daily" {{ old('recurrence_type') === 'daily' ? 'selected' : '' }}>Quotidienne</option>
+                                                <option value="weekly" {{ old('recurrence_type', 'weekly') === 'weekly' ? 'selected' : '' }}>Hebdomadaire</option>
+                                                <option value="monthly" {{ old('recurrence_type') === 'monthly' ? 'selected' : '' }}>Mensuelle</option>
+                                                <option value="yearly" {{ old('recurrence_type') === 'yearly' ? 'selected' : '' }}>Annuelle</option>
+                                            </select>
+                                        </div>
+
+                                        <!-- Intervalle -->
+                                        <div>
+                                            <label for="recurrence_interval" class="block text-sm font-medium text-gray-700">Tous les</label>
+                                            <div class="flex items-center space-x-2">
+                                                <input type="number" name="recurrence_interval" id="recurrence_interval" min="1" value="{{ old('recurrence_interval', 1) }}"
+                                                       class="mt-1 block w-20 border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                                                <span class="text-sm text-gray-600" id="recurrence-interval-label">semaine(s)</span>
+                                            </div>
+                                        </div>
+
+                                        <!-- Date de fin (optionnelle) -->
+                                        <div class="md:col-span-2">
+                                            <label for="recurrence_end_date" class="block text-sm font-medium text-gray-700">Date de fin (optionnelle)</label>
+                                            <input type="date" name="recurrence_end_date" id="recurrence_end_date"
+                                                   value="{{ old('recurrence_end_date') }}"
+                                                   class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                                            <p class="mt-1 text-xs text-gray-500">Laissez vide pour une récurrence illimitée</p>
+                                        </div>
+                                    </div>
+
+                                    <div class="bg-blue-50 border border-blue-200 rounded-md p-3">
+                                        <p class="text-sm text-blue-800">
+                                            <strong>ℹ️ Info :</strong> Les tâches récurrentes génèrent automatiquement de nouvelles instances selon le modèle défini.
+                                            La tâche originale sert de template et ne disparaît pas.
+                                        </p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -187,20 +242,51 @@
         function previewImage(input) {
             const preview = document.getElementById('image-preview');
             const previewImg = document.getElementById('preview-img');
-            
+
             if (input.files && input.files[0]) {
                 const reader = new FileReader();
-                
+
                 reader.onload = function(e) {
                     previewImg.src = e.target.result;
                     preview.classList.remove('hidden');
                 };
-                
+
                 reader.readAsDataURL(input.files[0]);
             } else {
                 preview.classList.add('hidden');
             }
         }
+
+        // Gestion de l'affichage des options de récurrence
+        function toggleRecurrence() {
+            const checkbox = document.getElementById('is_recurring');
+            const options = document.getElementById('recurrence-options');
+
+            if (checkbox.checked) {
+                options.classList.remove('hidden');
+            } else {
+                options.classList.add('hidden');
+            }
+        }
+
+        // Mettre à jour le label de l'intervalle selon le type
+        document.getElementById('recurrence_type')?.addEventListener('change', function() {
+            const label = document.getElementById('recurrence-interval-label');
+            const labels = {
+                'daily': 'jour(s)',
+                'weekly': 'semaine(s)',
+                'monthly': 'mois',
+                'yearly': 'an(s)'
+            };
+            label.textContent = labels[this.value] || 'unité(s)';
+        });
+
+        // Afficher les options si la checkbox est cochée au chargement (old input)
+        document.addEventListener('DOMContentLoaded', function() {
+            if (document.getElementById('is_recurring').checked) {
+                document.getElementById('recurrence-options').classList.remove('hidden');
+            }
+        });
 
         // Gestion du modal de création rapide de catégorie
         function openCategoryModal() {

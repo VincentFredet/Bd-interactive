@@ -253,6 +253,11 @@
                                                 <!-- Titre et priorité -->
                                                 <div class="flex items-start justify-between mb-2">
                                                     <h4 class="font-semibold text-sm text-gray-900 line-clamp-2 flex-1">
+                                                        @if($task->is_recurring_template)
+                                                            <span class="text-indigo-600" title="{{ $task->recurrence_description }}">🔄</span>
+                                                        @elseif($task->is_recurring_instance)
+                                                            <span class="text-gray-400" title="Instance d'une tâche récurrente">↻</span>
+                                                        @endif
                                                         {{ $task->title }}
                                                     </h4>
                                                     <span class="ml-1 px-1.5 py-0.5 text-xs rounded-full {{ $task->priority_badge_class }} flex-shrink-0">

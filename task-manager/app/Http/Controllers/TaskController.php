@@ -146,6 +146,22 @@ class TaskController extends Controller
             $validated['image'] = $imageName;
         }
 
+        // Gérer la récurrence
+        if ($request->has('is_recurring') && $request->is_recurring) {
+            $validated['is_recurring'] = true;
+            $validated['recurrence_pattern'] = [
+                'type' => $request->recurrence_type ?? 'weekly',
+                'interval' => (int) ($request->recurrence_interval ?? 1),
+            ];
+
+            if ($request->filled('recurrence_end_date')) {
+                $validated['recurrence_pattern']['end_date'] = $request->recurrence_end_date;
+            }
+        } else {
+            $validated['is_recurring'] = false;
+            $validated['recurrence_pattern'] = null;
+        }
+
         $task = Task::create($validated);
 
         // Synchroniser les catégories
@@ -153,7 +169,11 @@ class TaskController extends Controller
             $task->categories()->sync($request->categories);
         }
 
-        return redirect()->route('tasks.index')->with('success', 'Tâche créée avec succès!');
+        $message = $task->is_recurring
+            ? 'Tâche récurrente créée avec succès! Les instances seront générées automatiquement.'
+            : 'Tâche créée avec succès!';
+
+        return redirect()->route('tasks.index')->with('success', $message);
     }
 
     /**

@@ -22,6 +22,10 @@ class Task extends Model
         'week_date',
         'due_date',
         'completed_at',
+        'is_recurring',
+        'recurrence_pattern',
+        'recurrence_parent_id',
+        'last_generated_at',
     ];
 
     protected $casts = [
@@ -30,6 +34,9 @@ class Task extends Model
         'week_date' => 'date',
         'due_date' => 'date',
         'completed_at' => 'datetime',
+        'is_recurring' => 'boolean',
+        'recurrence_pattern' => 'array',
+        'last_generated_at' => 'datetime',
     ];
 
     public function context(): BelongsTo
@@ -55,6 +62,22 @@ class Task extends Model
     public function categories(): BelongsToMany
     {
         return $this->belongsToMany(Category::class);
+    }
+
+    /**
+     * Get the parent recurring task (if this is an instance)
+     */
+    public function recurrenceParent(): BelongsTo
+    {
+        return $this->belongsTo(Task::class, 'recurrence_parent_id');
+    }
+
+    /**
+     * Get all instances generated from this recurring task
+     */
+    public function recurrenceInstances(): HasMany
+    {
+        return $this->hasMany(Task::class, 'recurrence_parent_id');
     }
 
     public function getImageUrlAttribute(): ?string
@@ -258,12 +281,141 @@ class Task extends Model
     }
 
     /**
+     * Check if this task is a recurring task template
+     */
+    public function getIsRecurringTemplateAttribute(): bool
+    {
+        return $this->is_recurring && $this->recurrence_parent_id === null;
+    }
+
+    /**
+     * Check if this task is a generated instance from a recurring task
+     */
+    public function getIsRecurringInstanceAttribute(): bool
+    {
+        return $this->recurrence_parent_id !== null;
+    }
+
+    /**
+     * Get the next occurrence date based on the recurrence pattern
+     */
+    public function getNextOccurrenceDate(?Carbon $fromDate = null): ?Carbon
+    {
+        if (!$this->is_recurring || !$this->recurrence_pattern) {
+            return null;
+        }
+
+        $fromDate = $fromDate ?? $this->last_generated_at ?? $this->due_date ?? Carbon::today();
+        $pattern = $this->recurrence_pattern;
+
+        $nextDate = match($pattern['type'] ?? 'daily') {
+            'daily' => $fromDate->copy()->addDays($pattern['interval'] ?? 1),
+            'weekly' => $fromDate->copy()->addWeeks($pattern['interval'] ?? 1),
+            'monthly' => $fromDate->copy()->addMonths($pattern['interval'] ?? 1),
+            'yearly' => $fromDate->copy()->addYears($pattern['interval'] ?? 1),
+            default => null,
+        };
+
+        // Check if we have an end date and if we've passed it
+        if (isset($pattern['end_date'])) {
+            $endDate = Carbon::parse($pattern['end_date']);
+            if ($nextDate && $nextDate->isAfter($endDate)) {
+                return null;
+            }
+        }
+
+        return $nextDate;
+    }
+
+    /**
+     * Generate the next instance of this recurring task
+     */
+    public function generateNextInstance(): ?Task
+    {
+        if (!$this->is_recurring_template) {
+            return null;
+        }
+
+        $nextDate = $this->getNextOccurrenceDate();
+        if (!$nextDate) {
+            return null;
+        }
+
+        // Create a new task instance
+        $instance = $this->replicate([
+            'is_recurring',
+            'recurrence_pattern',
+            'last_generated_at',
+            'completed_at',
+        ]);
+
+        $instance->due_date = $nextDate;
+        $instance->week_date = self::getWeekStart($nextDate);
+        $instance->recurrence_parent_id = $this->id;
+        $instance->status = 'todo';
+        $instance->save();
+
+        // Sync categories
+        $instance->categories()->sync($this->categories->pluck('id'));
+
+        // Update last generated timestamp on parent
+        $this->update(['last_generated_at' => Carbon::now()]);
+
+        return $instance;
+    }
+
+    /**
+     * Scope to get only recurring templates
+     */
+    public function scopeRecurringTemplates($query)
+    {
+        return $query->where('is_recurring', true)
+                    ->whereNull('recurrence_parent_id');
+    }
+
+    /**
+     * Scope to get only recurring instances
+     */
+    public function scopeRecurringInstances($query)
+    {
+        return $query->whereNotNull('recurrence_parent_id');
+    }
+
+    /**
+     * Get human-readable recurrence description
+     */
+    public function getRecurrenceDescriptionAttribute(): ?string
+    {
+        if (!$this->is_recurring || !$this->recurrence_pattern) {
+            return null;
+        }
+
+        $pattern = $this->recurrence_pattern;
+        $interval = $pattern['interval'] ?? 1;
+
+        $description = match($pattern['type'] ?? 'daily') {
+            'daily' => $interval === 1 ? 'Tous les jours' : "Tous les {$interval} jours",
+            'weekly' => $interval === 1 ? 'Toutes les semaines' : "Toutes les {$interval} semaines",
+            'monthly' => $interval === 1 ? 'Tous les mois' : "Tous les {$interval} mois",
+            'yearly' => $interval === 1 ? 'Tous les ans' : "Tous les {$interval} ans",
+            default => 'Récurrence personnalisée',
+        };
+
+        if (isset($pattern['end_date'])) {
+            $endDate = Carbon::parse($pattern['end_date'])->format('d/m/Y');
+            $description .= " (jusqu'au {$endDate})";
+        }
+
+        return $description;
+    }
+
+    /**
      * Définir automatiquement la semaine lors de la création si non spécifiée
      */
     protected static function boot()
     {
         parent::boot();
-        
+
         static::creating(function ($task) {
             if (!$task->week_date) {
                 $task->week_date = self::getWeekStart();
