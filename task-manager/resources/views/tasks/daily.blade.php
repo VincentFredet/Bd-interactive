@@ -85,122 +85,113 @@
                 </div>
             </div>
 
-            <!-- Filtres -->
+            <!-- Filtres compacts -->
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-6">
-                <div class="p-6 bg-white border-b border-gray-200">
-                    <div class="flex justify-between items-center mb-4">
-                        <h3 class="text-lg font-medium text-gray-900">Filtres</h3>
+                <div class="p-4 bg-white border-b border-gray-200">
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="text-base font-medium text-gray-900">Filtres</h3>
                         @if(request()->hasAny(['context', 'category', 'priority', 'status', 'user']))
                             <a href="{{ route('tasks.daily', ['date' => $currentDate->format('Y-m-d')]) }}"
-                               class="text-sm text-red-600 hover:text-red-800 flex items-center">
-                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                               class="text-xs text-red-600 hover:text-red-800 flex items-center">
+                                <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                                 </svg>
-                                Effacer les filtres
+                                Réinitialiser
                             </a>
                         @endif
                     </div>
 
-                    <!-- Contexte -->
-                    <div class="mb-4">
-                        <h4 class="text-sm font-semibold text-gray-700 mb-2">Contexte</h4>
-                        <div class="flex flex-wrap gap-2">
-                            <a href="{{ route('tasks.daily', array_merge(request()->except('context'), ['date' => $currentDate->format('Y-m-d')])) }}"
-                               class="px-3 py-1 rounded-full text-xs font-medium {{ !request('context') ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300' }}">
-                                Tous
-                            </a>
-                            @foreach($contexts as $context)
-                                <a href="{{ route('tasks.daily', array_merge(request()->except('context'), ['context' => $context->id, 'date' => $currentDate->format('Y-m-d')])) }}"
-                                   class="px-3 py-1 rounded-full text-xs font-medium text-white {{ request('context') == $context->id ? $context->button_active_class : $context->button_inactive_class }}">
-                                    {{ $context->name }}
-                                </a>
-                            @endforeach
+                    <!-- Tous les filtres en dropdowns sur une seule ligne -->
+                    <div class="flex flex-wrap gap-3 items-center">
+                        <!-- Contexte -->
+                        <div class="flex items-center gap-2">
+                            <label for="filter-context-daily" class="font-semibold text-gray-700 text-sm">Contexte:</label>
+                            <select id="filter-context-daily"
+                                    onchange="updateFilterDaily('context', this.value)"
+                                    class="border-gray-300 rounded-md shadow-sm text-sm focus:ring-blue-500 focus:border-blue-500">
+                                <option value="">Tous</option>
+                                @foreach($contexts as $context)
+                                    <option value="{{ $context->id }}" {{ request('context') == $context->id ? 'selected' : '' }}>
+                                        {{ $context->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <!-- Catégorie -->
+                        <div class="flex items-center gap-2">
+                            <label for="filter-category-daily" class="font-semibold text-gray-700 text-sm">Catégorie:</label>
+                            <select id="filter-category-daily"
+                                    onchange="updateFilterDaily('category', this.value)"
+                                    class="border-gray-300 rounded-md shadow-sm text-sm focus:ring-blue-500 focus:border-blue-500">
+                                <option value="">Toutes</option>
+                                @foreach($categories as $category)
+                                    <option value="{{ $category->id }}" {{ request('category') == $category->id ? 'selected' : '' }}>
+                                        {{ $category->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <!-- Priorité -->
+                        <div class="flex items-center gap-2">
+                            <label for="filter-priority-daily" class="font-semibold text-gray-700 text-sm">Priorité:</label>
+                            <select id="filter-priority-daily"
+                                    onchange="updateFilterDaily('priority', this.value)"
+                                    class="border-gray-300 rounded-md shadow-sm text-sm focus:ring-blue-500 focus:border-blue-500">
+                                <option value="">Toutes</option>
+                                <option value="low" {{ request('priority') === 'low' ? 'selected' : '' }}>Basse</option>
+                                <option value="medium" {{ request('priority') === 'medium' ? 'selected' : '' }}>Moyenne</option>
+                                <option value="high" {{ request('priority') === 'high' ? 'selected' : '' }}>Haute</option>
+                                <option value="urgent" {{ request('priority') === 'urgent' ? 'selected' : '' }}>Urgente</option>
+                            </select>
+                        </div>
+
+                        <!-- Statut -->
+                        <div class="flex items-center gap-2">
+                            <label for="filter-status-daily" class="font-semibold text-gray-700 text-sm">Statut:</label>
+                            <select id="filter-status-daily"
+                                    onchange="updateFilterDaily('status', this.value)"
+                                    class="border-gray-300 rounded-md shadow-sm text-sm focus:ring-blue-500 focus:border-blue-500">
+                                <option value="">Tous</option>
+                                <option value="todo" {{ request('status') === 'todo' ? 'selected' : '' }}>À faire</option>
+                                <option value="in_progress" {{ request('status') === 'in_progress' ? 'selected' : '' }}>En cours</option>
+                                <option value="done" {{ request('status') === 'done' ? 'selected' : '' }}>Terminé</option>
+                            </select>
+                        </div>
+
+                        <!-- Utilisateur -->
+                        <div class="flex items-center gap-2">
+                            <label for="filter-user-daily" class="font-semibold text-gray-700 text-sm">Assigné:</label>
+                            <select id="filter-user-daily"
+                                    onchange="updateFilterDaily('user', this.value)"
+                                    class="border-gray-300 rounded-md shadow-sm text-sm focus:ring-blue-500 focus:border-blue-500">
+                                <option value="">Tous</option>
+                                @foreach($users as $user)
+                                    <option value="{{ $user->id }}" {{ request('user') == $user->id ? 'selected' : '' }}>
+                                        {{ $user->name }}
+                                    </option>
+                                @endforeach
+                            </select>
                         </div>
                     </div>
 
-                    <!-- Catégorie -->
-                    <div class="mb-4">
-                        <h4 class="text-sm font-semibold text-gray-700 mb-2">Catégorie</h4>
-                        <div class="flex flex-wrap gap-2">
-                            <a href="{{ route('tasks.daily', array_merge(request()->except('category'), ['date' => $currentDate->format('Y-m-d')])) }}"
-                               class="px-3 py-1 rounded-full text-xs font-medium {{ !request('category') ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300' }}">
-                                Toutes
-                            </a>
-                            @foreach($categories as $category)
-                                <a href="{{ route('tasks.daily', array_merge(request()->except('category'), ['category' => $category->id, 'date' => $currentDate->format('Y-m-d')])) }}"
-                                   class="px-3 py-1 rounded-full text-xs font-medium {{ request('category') == $category->id ? $category->badge_class : 'bg-gray-200 text-gray-700 hover:bg-gray-300' }}">
-                                    {{ $category->name }}
-                                </a>
-                            @endforeach
-                        </div>
-                    </div>
+                    <script>
+                        function updateFilterDaily(filterName, filterValue) {
+                            const url = new URL(window.location.href);
+                            const params = new URLSearchParams(url.search);
 
-                    <!-- Priorité -->
-                    <div class="mb-4">
-                        <h4 class="text-sm font-semibold text-gray-700 mb-2">Priorité</h4>
-                        <div class="flex flex-wrap gap-2">
-                            <a href="{{ route('tasks.daily', array_merge(request()->except('priority'), ['date' => $currentDate->format('Y-m-d')])) }}"
-                               class="px-3 py-1 rounded-full text-xs font-medium {{ !request('priority') ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300' }}">
-                                Toutes
-                            </a>
-                            <a href="{{ route('tasks.daily', array_merge(request()->except('priority'), ['priority' => 'low', 'date' => $currentDate->format('Y-m-d')])) }}"
-                               class="px-3 py-1 rounded-full text-xs font-medium {{ request('priority') === 'low' ? 'bg-gray-100 text-gray-800' : 'bg-gray-200 text-gray-700 hover:bg-gray-300' }}">
-                                Basse
-                            </a>
-                            <a href="{{ route('tasks.daily', array_merge(request()->except('priority'), ['priority' => 'medium', 'date' => $currentDate->format('Y-m-d')])) }}"
-                               class="px-3 py-1 rounded-full text-xs font-medium {{ request('priority') === 'medium' ? 'bg-blue-100 text-blue-800' : 'bg-gray-200 text-gray-700 hover:bg-gray-300' }}">
-                                Moyenne
-                            </a>
-                            <a href="{{ route('tasks.daily', array_merge(request()->except('priority'), ['priority' => 'high', 'date' => $currentDate->format('Y-m-d')])) }}"
-                               class="px-3 py-1 rounded-full text-xs font-medium {{ request('priority') === 'high' ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-200 text-gray-700 hover:bg-gray-300' }}">
-                                Haute
-                            </a>
-                            <a href="{{ route('tasks.daily', array_merge(request()->except('priority'), ['priority' => 'urgent', 'date' => $currentDate->format('Y-m-d')])) }}"
-                               class="px-3 py-1 rounded-full text-xs font-medium {{ request('priority') === 'urgent' ? 'bg-red-100 text-red-800' : 'bg-gray-200 text-gray-700 hover:bg-gray-300' }}">
-                                Urgente
-                            </a>
-                        </div>
-                    </div>
+                            // Mettre à jour ou supprimer le filtre
+                            if (filterValue) {
+                                params.set(filterName, filterValue);
+                            } else {
+                                params.delete(filterName);
+                            }
 
-                    <!-- Statut -->
-                    <div class="mb-4">
-                        <h4 class="text-sm font-semibold text-gray-700 mb-2">Statut</h4>
-                        <div class="flex flex-wrap gap-2">
-                            <a href="{{ route('tasks.daily', array_merge(request()->except('status'), ['date' => $currentDate->format('Y-m-d')])) }}"
-                               class="px-3 py-1 rounded-full text-xs font-medium {{ !request('status') ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300' }}">
-                                Tous
-                            </a>
-                            <a href="{{ route('tasks.daily', array_merge(request()->except('status'), ['status' => 'todo', 'date' => $currentDate->format('Y-m-d')])) }}"
-                               class="px-3 py-1 rounded-full text-xs font-medium {{ request('status') === 'todo' ? 'bg-gray-100 text-gray-800' : 'bg-gray-200 text-gray-700 hover:bg-gray-300' }}">
-                                À faire
-                            </a>
-                            <a href="{{ route('tasks.daily', array_merge(request()->except('status'), ['status' => 'in_progress', 'date' => $currentDate->format('Y-m-d')])) }}"
-                               class="px-3 py-1 rounded-full text-xs font-medium {{ request('status') === 'in_progress' ? 'bg-blue-100 text-blue-800' : 'bg-gray-200 text-gray-700 hover:bg-gray-300' }}">
-                                En cours
-                            </a>
-                            <a href="{{ route('tasks.daily', array_merge(request()->except('status'), ['status' => 'done', 'date' => $currentDate->format('Y-m-d')])) }}"
-                               class="px-3 py-1 rounded-full text-xs font-medium {{ request('status') === 'done' ? 'bg-green-100 text-green-800' : 'bg-gray-200 text-gray-700 hover:bg-gray-300' }}">
-                                Terminé
-                            </a>
-                        </div>
-                    </div>
-
-                    <!-- Utilisateur -->
-                    <div>
-                        <h4 class="text-sm font-semibold text-gray-700 mb-2">Assigné à</h4>
-                        <div class="flex flex-wrap gap-2">
-                            <a href="{{ route('tasks.daily', array_merge(request()->except('user'), ['date' => $currentDate->format('Y-m-d')])) }}"
-                               class="px-3 py-1 rounded-full text-xs font-medium {{ !request('user') ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300' }}">
-                                Tous
-                            </a>
-                            @foreach($users as $user)
-                                <a href="{{ route('tasks.daily', array_merge(request()->except('user'), ['user' => $user->id, 'date' => $currentDate->format('Y-m-d')])) }}"
-                                   class="px-3 py-1 rounded-full text-xs font-medium {{ request('user') == $user->id ? 'bg-purple-100 text-purple-800' : 'bg-gray-200 text-gray-700 hover:bg-gray-300' }}">
-                                    {{ $user->name }}
-                                </a>
-                            @endforeach
-                        </div>
-                    </div>
+                            // Rediriger avec tous les paramètres
+                            window.location.href = url.pathname + '?' + params.toString();
+                        }
+                    </script>
                 </div>
             </div>
 

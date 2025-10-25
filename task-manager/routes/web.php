@@ -8,6 +8,7 @@ use App\Http\Controllers\SubtaskController;
 use App\Http\Controllers\TaskCommentController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\TaskImageController;
+use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -35,6 +36,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Categories routes
     Route::resource('categories', CategoryController::class);
+
+    // Users routes
+    Route::resource('users', UserController::class);
 
     // Subtasks routes
     Route::post('/tasks/{task}/subtasks', [SubtaskController::class, 'store'])->name('subtasks.store');

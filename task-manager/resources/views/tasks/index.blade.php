@@ -264,14 +264,21 @@
 
                                                 <!-- Titre et priorité -->
                                                 <div class="flex items-start justify-between mb-2">
-                                                    <h4 class="font-semibold text-sm text-gray-900 line-clamp-2 flex-1">
-                                                        @if($task->is_recurring_template)
-                                                            <span class="text-indigo-600" title="{{ $task->recurrence_description }}">🔄</span>
-                                                        @elseif($task->is_recurring_instance)
-                                                            <span class="text-gray-400" title="Instance d'une tâche récurrente">↻</span>
-                                                        @endif
-                                                        {{ $task->title }}
-                                                    </h4>
+                                                    <div class="flex items-start gap-2 flex-1">
+                                                        <input type="checkbox"
+                                                               {{ $task->status === 'done' ? 'checked' : '' }}
+                                                               onclick="event.stopPropagation(); toggleTaskCompletion({{ $task->id }}, this.checked)"
+                                                               class="mt-0.5 w-4 h-4 text-green-600 bg-gray-100 border-gray-300 rounded focus:ring-green-500 cursor-pointer flex-shrink-0"
+                                                               title="Marquer comme terminée">
+                                                        <h4 class="font-semibold text-sm text-gray-900 line-clamp-2 flex-1 {{ $task->status === 'done' ? 'line-through text-gray-500' : '' }}">
+                                                            @if($task->is_recurring_template)
+                                                                <span class="text-indigo-600" title="{{ $task->recurrence_description }}">🔄</span>
+                                                            @elseif($task->is_recurring_instance)
+                                                                <span class="text-gray-400" title="Instance d'une tâche récurrente">↻</span>
+                                                            @endif
+                                                            {{ $task->title }}
+                                                        </h4>
+                                                    </div>
                                                     <span class="ml-1 px-1.5 py-0.5 text-xs rounded-full {{ $task->priority_badge_class }} flex-shrink-0">
                                                         {{ substr(ucfirst($task->priority), 0, 1) }}
                                                     </span>
@@ -430,6 +437,33 @@
             .catch(error => {
                 console.error('Erreur:', error);
                 location.reload();
+            });
+        }
+
+        // Toggle task completion via checkbox
+        function toggleTaskCompletion(taskId, isChecked) {
+            const newStatus = isChecked ? 'done' : 'todo';
+
+            fetch(`/tasks/${taskId}/status`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                },
+                body: JSON.stringify({ status: newStatus })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Refresh the page to update the UI
+                    location.reload();
+                } else {
+                    alert('Erreur lors de la mise à jour du statut');
+                }
+            })
+            .catch(error => {
+                console.error('Erreur:', error);
+                alert('Erreur lors de la mise à jour du statut');
             });
         }
 
