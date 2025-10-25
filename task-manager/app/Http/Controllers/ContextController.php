@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Context;
+use App\Helpers\ColorHelper;
 use Illuminate\Http\Request;
 
 class ContextController extends Controller
@@ -22,7 +23,8 @@ class ContextController extends Controller
     public function create()
     {
         $colors = Context::COLORS;
-        return view('contexts.create', compact('colors'));
+        $colorHexMap = ColorHelper::getColorHexMap();
+        return view('contexts.create', compact('colors', 'colorHexMap'));
     }
 
     /**
@@ -55,7 +57,8 @@ class ContextController extends Controller
     public function edit(Context $context)
     {
         $colors = Context::COLORS;
-        return view('contexts.edit', compact('context', 'colors'));
+        $colorHexMap = ColorHelper::getColorHexMap();
+        return view('contexts.edit', compact('context', 'colors', 'colorHexMap'));
     }
 
     /**

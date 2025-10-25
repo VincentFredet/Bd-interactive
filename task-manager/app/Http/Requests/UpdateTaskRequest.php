@@ -28,6 +28,8 @@ class UpdateTaskRequest extends FormRequest
             'priority' => 'required|in:low,medium,high,urgent',
             'context_id' => 'nullable|exists:contexts,id',
             'user_id' => 'nullable|exists:users,id',
+            'categories' => 'nullable|array',
+            'categories.*' => 'exists:categories,id',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
             'week_date' => 'nullable|date',
             'due_date' => 'nullable|date',

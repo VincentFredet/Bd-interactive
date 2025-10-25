@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Category;
+use App\Helpers\ColorHelper;
 use Illuminate\Http\Request;
 
 class CategoryController extends Controller
@@ -22,7 +23,8 @@ class CategoryController extends Controller
     public function create()
     {
         $colors = Category::COLORS;
-        return view('categories.create', compact('colors'));
+        $colorHexMap = ColorHelper::getColorHexMap();
+        return view('categories.create', compact('colors', 'colorHexMap'));
     }
 
     /**
@@ -54,7 +56,8 @@ class CategoryController extends Controller
     public function edit(Category $category)
     {
         $colors = Category::COLORS;
-        return view('categories.edit', compact('category', 'colors'));
+        $colorHexMap = ColorHelper::getColorHexMap();
+        return view('categories.edit', compact('category', 'colors', 'colorHexMap'));
     }
 
     /**

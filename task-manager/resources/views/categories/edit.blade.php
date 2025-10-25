@@ -33,9 +33,9 @@
                                                {{ old('color', $category->color) == $colorKey ? 'checked' : '' }}
                                                class="sr-only peer" required>
                                         <div class="flex flex-col items-center p-3 rounded-lg border-2 border-gray-200
-                                                    peer-checked:border-{{ $colorKey }}-500 peer-checked:ring-2 peer-checked:ring-{{ $colorKey }}-200
-                                                    hover:border-{{ $colorKey }}-300 transition-all">
-                                            <div class="w-12 h-12 rounded-full bg-{{ $colorKey }}-500 mb-2"></div>
+                                                    peer-checked:border-blue-500 peer-checked:ring-2 peer-checked:ring-blue-200
+                                                    hover:border-gray-300 transition-all">
+                                            <div class="w-12 h-12 rounded-full mb-2" style="background-color: {{ $colorHexMap[$colorKey] }};"></div>
                                             <span class="text-xs text-gray-600 text-center">{{ $colorName }}</span>
                                         </div>
                                     </label>

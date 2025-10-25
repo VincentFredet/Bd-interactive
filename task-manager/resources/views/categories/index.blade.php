@@ -35,7 +35,7 @@
                                 <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
                                     <div class="flex items-center justify-between mb-3">
                                         <div class="flex items-center space-x-3">
-                                            <div class="w-8 h-8 rounded-full bg-{{ $category->color }}-500"></div>
+                                            <div class="w-8 h-8 rounded-full" style="background-color: {{ $category->color_hex }};"></div>
                                             <h3 class="text-lg font-semibold text-gray-900">{{ $category->name }}</h3>
                                         </div>
                                         <span class="px-2 py-1 text-xs font-medium rounded {{ $category->badge_class }}">
