@@ -5,6 +5,17 @@
                 {{ __('Gestion des Tâches') }}
             </h2>
             <div class="flex space-x-2">
+                @if(request('user') == auth()->id())
+                    <a href="{{ route('tasks.index', request()->except('user')) }}"
+                       class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-2 px-4 rounded flex items-center">
+                        📋 Toutes les tâches
+                    </a>
+                @else
+                    <a href="{{ route('tasks.index', array_merge(request()->query(), ['user' => auth()->id()])) }}"
+                       class="bg-indigo-500 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded flex items-center">
+                        👤 Mes tâches
+                    </a>
+                @endif
                 <a href="{{ route('tasks.daily') }}" class="bg-purple-500 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded">
                     Vue Quotidienne
                 </a>
