@@ -34,7 +34,19 @@ class ContextController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255|unique:contexts,name',
-            'color' => 'required|string|in:' . implode(',', array_keys(Context::COLORS)),
+            'color' => [
+                'required',
+                'string',
+                function ($attribute, $value, $fail) {
+                    // Accepter soit un nom de couleur prédéfini, soit un code hexadécimal
+                    $isValidName = in_array($value, array_keys(Context::COLORS));
+                    $isValidHex = preg_match('/^#[0-9A-Fa-f]{6}$/', $value);
+
+                    if (!$isValidName && !$isValidHex) {
+                        $fail('La couleur doit être un nom valide ou un code hexadécimal (ex: #FF5733).');
+                    }
+                }
+            ],
         ]);
 
         Context::create($validated);
@@ -68,7 +80,19 @@ class ContextController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255|unique:contexts,name,' . $context->id,
-            'color' => 'required|string|in:' . implode(',', array_keys(Context::COLORS)),
+            'color' => [
+                'required',
+                'string',
+                function ($attribute, $value, $fail) {
+                    // Accepter soit un nom de couleur prédéfini, soit un code hexadécimal
+                    $isValidName = in_array($value, array_keys(Context::COLORS));
+                    $isValidHex = preg_match('/^#[0-9A-Fa-f]{6}$/', $value);
+
+                    if (!$isValidName && !$isValidHex) {
+                        $fail('La couleur doit être un nom valide ou un code hexadécimal (ex: #FF5733).');
+                    }
+                }
+            ],
         ]);
 
         $context->update($validated);

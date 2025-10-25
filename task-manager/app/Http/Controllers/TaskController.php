@@ -76,20 +76,30 @@ class TaskController extends Controller
         }
 
         $contexts = Context::all();
-        $categories = \App\Models\Category::all();
         $users = User::all();
-        
+
+        // Récupérer le contexte sélectionné pour le thème dynamique
+        $selectedContext = null;
+        if ($request->has('context') && $request->context !== '') {
+            $selectedContext = Context::find($request->context);
+            // Filtrer les catégories par contexte sélectionné
+            $categories = \App\Models\Category::where('context_id', $request->context)->get();
+        } else {
+            // Afficher toutes les catégories si aucun contexte n'est sélectionné
+            $categories = \App\Models\Category::all();
+        }
+
         // Calculer les semaines pour la navigation
         $currentWeek = Task::getWeekStart();
         $previousWeek = $currentWeek->copy()->subWeek();
         $nextWeek = $currentWeek->copy()->addWeek();
-        
+
         // Libellé de la semaine actuelle
         $weekEnd = $weekStart->copy()->endOfWeek(Carbon::SUNDAY);
-        $weekLabel = $weekStart->isCurrentWeek() 
-            ? 'Cette semaine' 
+        $weekLabel = $weekStart->isCurrentWeek()
+            ? 'Cette semaine'
             : 'Semaine du ' . $weekStart->format('d/m') . ' au ' . $weekEnd->format('d/m');
-        
+
         // Statistiques de la semaine
         $weekStats = [
             'total' => $tasks->count(),
@@ -97,7 +107,7 @@ class TaskController extends Controller
             'in_progress' => $tasks->where('status', 'in_progress')->count(),
             'done' => $tasks->where('status', 'done')->count(),
         ];
-        
+
         return view('tasks.index', compact(
             'tasks',
             'weekDays',
@@ -109,7 +119,8 @@ class TaskController extends Controller
             'nextWeek',
             'currentWeek',
             'weekLabel',
-            'weekStats'
+            'weekStats',
+            'selectedContext'
         ));
     }
 

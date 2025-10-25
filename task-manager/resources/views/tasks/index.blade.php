@@ -1,9 +1,31 @@
 <x-app-layout>
+    @php
+        // Définir le thème de couleur basé sur le contexte sélectionné
+        $themeColor = $selectedContext ? $selectedContext->color : 'blue';
+        $themeBg = 'bg-' . $themeColor . '-500';
+        $themeBgHover = 'bg-' . $themeColor . '-600';
+        $themeBgLight = 'bg-' . $themeColor . '-100';
+        $themeText = 'text-' . $themeColor . '-600';
+        $themeBorder = 'border-' . $themeColor . '-500';
+    @endphp
+
     <x-slot name="header">
         <div class="flex justify-between items-center">
-            <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                {{ __('Gestion des Tâches') }}
-            </h2>
+            <!-- Filtre des contextes dans le header -->
+            <div class="flex items-center gap-2">
+                <span class="font-semibold text-lg text-gray-800 mr-2">Contexte:</span>
+                <a href="{{ route('tasks.index', array_merge(request()->except('context'), ['week' => request('week')])) }}"
+                   class="px-4 py-2 rounded-lg font-medium transition-colors {{ !request('context') ? 'bg-gray-700 text-white' : 'bg-white border-2 border-gray-300 text-gray-700 hover:bg-gray-100' }}">
+                    Tous
+                </a>
+                @foreach($contexts as $context)
+                    <a href="{{ route('tasks.index', array_merge(request()->except('context'), ['context' => $context->id, 'week' => request('week')])) }}"
+                       class="px-4 py-2 rounded-lg font-medium transition-colors {{ request('context') == $context->id ? ($context->button_active_class ?: '') : ($context->button_inactive_class ?: 'bg-white border-2 border-gray-300 hover:bg-gray-100') }}"
+                       style="{{ request('context') == $context->id ? $context->button_active_style : $context->button_inactive_style }}">
+                        {{ $context->name }}
+                    </a>
+                @endforeach
+            </div>
             <div class="flex space-x-2">
                 @if(request('user') == auth()->id())
                     <a href="{{ route('tasks.index', request()->except('user')) }}"
@@ -16,13 +38,13 @@
                         👤 Mes tâches
                     </a>
                 @endif
-                <a href="{{ route('tasks.daily') }}" class="bg-purple-500 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded">
+                <a href="{{ route('tasks.daily') }}" class="{{ $themeBg }} hover:{{ $themeBgHover }} text-white font-bold py-2 px-4 rounded transition-colors">
                     Vue Quotidienne
                 </a>
-                <a href="{{ route('contexts.create') }}" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
+                <a href="{{ route('contexts.create') }}" class="{{ $themeBg }} hover:{{ $themeBgHover }} text-white font-bold py-2 px-4 rounded transition-colors">
                     Nouveau Contexte
                 </a>
-                <a href="{{ route('tasks.create') }}" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                <a href="{{ route('tasks.create') }}" class="{{ $themeBg }} hover:{{ $themeBgHover }} text-white font-bold py-2 px-4 rounded transition-colors">
                     Nouvelle Tâche
                 </a>
             </div>
@@ -30,7 +52,7 @@
     </x-slot>
 
     <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+        <div class="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
             @if(session('success'))
                 <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
                     {{ session('success') }}
@@ -90,128 +112,106 @@
                 </div>
             </div>
 
-            <!-- Filtres -->
+            <!-- Filtres compacts -->
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-6">
-                <div class="p-6 bg-white border-b border-gray-200">
-                    <div class="flex justify-between items-center mb-4">
-                        <h3 class="text-lg font-medium text-gray-900">Filtres</h3>
-                        @if(request()->hasAny(['context', 'category', 'priority', 'status', 'user']))
-                            <a href="{{ route('tasks.index', ['week' => request('week')]) }}"
-                               class="text-sm text-red-600 hover:text-red-800 flex items-center">
-                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="p-4 bg-white border-b border-gray-200">
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="text-base font-medium text-gray-900">Filtres</h3>
+                        @if(request()->hasAny(['category', 'priority', 'status', 'user']))
+                            <a href="{{ route('tasks.index', ['week' => request('week'), 'context' => request('context')]) }}"
+                               class="text-xs text-red-600 hover:text-red-800 flex items-center">
+                                <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                                 </svg>
-                                Effacer les filtres
+                                Réinitialiser
                             </a>
                         @endif
                     </div>
 
-                    <!-- Contexte -->
-                    <div class="mb-4">
-                        <h4 class="text-sm font-semibold text-gray-700 mb-2">Contexte</h4>
-                        <div class="flex flex-wrap gap-2">
-                            <a href="{{ route('tasks.index', array_merge(request()->except('context'), ['week' => request('week')])) }}"
-                               class="px-3 py-1 rounded-full text-xs font-medium {{ !request('context') ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300' }}">
-                                Tous
-                            </a>
-                            @foreach($contexts as $context)
-                                <a href="{{ route('tasks.index', array_merge(request()->except('context'), ['context' => $context->id, 'week' => request('week')])) }}"
-                                   class="px-3 py-1 rounded-full text-xs font-medium text-white {{ request('context') == $context->id ? $context->button_active_class : $context->button_inactive_class }}">
-                                    {{ $context->name }}
-                                </a>
-                            @endforeach
+                    <!-- Tous les filtres en dropdowns sur une seule ligne -->
+                    <div class="flex flex-wrap gap-3 items-center">
+                        <!-- Catégorie -->
+                        <div class="flex items-center gap-2">
+                            <label for="filter-category" class="font-semibold text-gray-700 text-sm">Catégorie:</label>
+                            <select id="filter-category"
+                                    onchange="updateFilter('category', this.value)"
+                                    class="border-gray-300 rounded-md shadow-sm text-sm focus:ring-{{ $themeColor }}-500 focus:border-{{ $themeColor }}-500">
+                                <option value="">Toutes</option>
+                                @foreach($categories as $category)
+                                    <option value="{{ $category->id }}" {{ request('category') == $category->id ? 'selected' : '' }}>
+                                        {{ $category->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <!-- Priorité -->
+                        <div class="flex items-center gap-2">
+                            <label for="filter-priority" class="font-semibold text-gray-700 text-sm">Priorité:</label>
+                            <select id="filter-priority"
+                                    onchange="updateFilter('priority', this.value)"
+                                    class="border-gray-300 rounded-md shadow-sm text-sm focus:ring-{{ $themeColor }}-500 focus:border-{{ $themeColor }}-500">
+                                <option value="">Toutes</option>
+                                <option value="low" {{ request('priority') === 'low' ? 'selected' : '' }}>Basse</option>
+                                <option value="medium" {{ request('priority') === 'medium' ? 'selected' : '' }}>Moyenne</option>
+                                <option value="high" {{ request('priority') === 'high' ? 'selected' : '' }}>Haute</option>
+                                <option value="urgent" {{ request('priority') === 'urgent' ? 'selected' : '' }}>Urgente</option>
+                            </select>
+                        </div>
+
+                        <!-- Statut -->
+                        <div class="flex items-center gap-2">
+                            <label for="filter-status" class="font-semibold text-gray-700 text-sm">Statut:</label>
+                            <select id="filter-status"
+                                    onchange="updateFilter('status', this.value)"
+                                    class="border-gray-300 rounded-md shadow-sm text-sm focus:ring-{{ $themeColor }}-500 focus:border-{{ $themeColor }}-500">
+                                <option value="">Tous</option>
+                                <option value="todo" {{ request('status') === 'todo' ? 'selected' : '' }}>À faire</option>
+                                <option value="in_progress" {{ request('status') === 'in_progress' ? 'selected' : '' }}>En cours</option>
+                                <option value="done" {{ request('status') === 'done' ? 'selected' : '' }}>Terminé</option>
+                            </select>
+                        </div>
+
+                        <!-- Utilisateur -->
+                        <div class="flex items-center gap-2">
+                            <label for="filter-user" class="font-semibold text-gray-700 text-sm">Assigné:</label>
+                            <select id="filter-user"
+                                    onchange="updateFilter('user', this.value)"
+                                    class="border-gray-300 rounded-md shadow-sm text-sm focus:ring-{{ $themeColor }}-500 focus:border-{{ $themeColor }}-500">
+                                <option value="">Tous</option>
+                                @foreach($users as $user)
+                                    <option value="{{ $user->id }}" {{ request('user') == $user->id ? 'selected' : '' }}>
+                                        {{ $user->name }}
+                                    </option>
+                                @endforeach
+                            </select>
                         </div>
                     </div>
 
-                    <!-- Catégorie -->
-                    <div class="mb-4">
-                        <h4 class="text-sm font-semibold text-gray-700 mb-2">Catégorie</h4>
-                        <div class="flex flex-wrap gap-2">
-                            <a href="{{ route('tasks.index', array_merge(request()->except('category'), ['week' => request('week')])) }}"
-                               class="px-3 py-1 rounded-full text-xs font-medium {{ !request('category') ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300' }}">
-                                Toutes
-                            </a>
-                            @foreach($categories as $category)
-                                <a href="{{ route('tasks.index', array_merge(request()->except('category'), ['category' => $category->id, 'week' => request('week')])) }}"
-                                   class="px-3 py-1 rounded-full text-xs font-medium {{ request('category') == $category->id ? $category->badge_class : 'bg-gray-200 text-gray-700 hover:bg-gray-300' }}">
-                                    {{ $category->name }}
-                                </a>
-                            @endforeach
-                        </div>
-                    </div>
+                    <script>
+                        function updateFilter(filterName, filterValue) {
+                            const url = new URL(window.location.href);
 
-                    <!-- Priorité -->
-                    <div class="mb-4">
-                        <h4 class="text-sm font-semibold text-gray-700 mb-2">Priorité</h4>
-                        <div class="flex flex-wrap gap-2">
-                            <a href="{{ route('tasks.index', array_merge(request()->except('priority'), ['week' => request('week')])) }}"
-                               class="px-3 py-1 rounded-full text-xs font-medium {{ !request('priority') ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300' }}">
-                                Toutes
-                            </a>
-                            <a href="{{ route('tasks.index', array_merge(request()->except('priority'), ['priority' => 'low', 'week' => request('week')])) }}"
-                               class="px-3 py-1 rounded-full text-xs font-medium {{ request('priority') === 'low' ? 'bg-gray-100 text-gray-800' : 'bg-gray-200 text-gray-700 hover:bg-gray-300' }}">
-                                Basse
-                            </a>
-                            <a href="{{ route('tasks.index', array_merge(request()->except('priority'), ['priority' => 'medium', 'week' => request('week')])) }}"
-                               class="px-3 py-1 rounded-full text-xs font-medium {{ request('priority') === 'medium' ? 'bg-blue-100 text-blue-800' : 'bg-gray-200 text-gray-700 hover:bg-gray-300' }}">
-                                Moyenne
-                            </a>
-                            <a href="{{ route('tasks.index', array_merge(request()->except('priority'), ['priority' => 'high', 'week' => request('week')])) }}"
-                               class="px-3 py-1 rounded-full text-xs font-medium {{ request('priority') === 'high' ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-200 text-gray-700 hover:bg-gray-300' }}">
-                                Haute
-                            </a>
-                            <a href="{{ route('tasks.index', array_merge(request()->except('priority'), ['priority' => 'urgent', 'week' => request('week')])) }}"
-                               class="px-3 py-1 rounded-full text-xs font-medium {{ request('priority') === 'urgent' ? 'bg-red-100 text-red-800' : 'bg-gray-200 text-gray-700 hover:bg-gray-300' }}">
-                                Urgente
-                            </a>
-                        </div>
-                    </div>
+                            // Préserver tous les paramètres existants
+                            const params = new URLSearchParams(url.search);
 
-                    <!-- Statut -->
-                    <div class="mb-4">
-                        <h4 class="text-sm font-semibold text-gray-700 mb-2">Statut</h4>
-                        <div class="flex flex-wrap gap-2">
-                            <a href="{{ route('tasks.index', array_merge(request()->except('status'), ['week' => request('week')])) }}"
-                               class="px-3 py-1 rounded-full text-xs font-medium {{ !request('status') ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300' }}">
-                                Tous
-                            </a>
-                            <a href="{{ route('tasks.index', array_merge(request()->except('status'), ['status' => 'todo', 'week' => request('week')])) }}"
-                               class="px-3 py-1 rounded-full text-xs font-medium {{ request('status') === 'todo' ? 'bg-gray-100 text-gray-800' : 'bg-gray-200 text-gray-700 hover:bg-gray-300' }}">
-                                À faire
-                            </a>
-                            <a href="{{ route('tasks.index', array_merge(request()->except('status'), ['status' => 'in_progress', 'week' => request('week')])) }}"
-                               class="px-3 py-1 rounded-full text-xs font-medium {{ request('status') === 'in_progress' ? 'bg-blue-100 text-blue-800' : 'bg-gray-200 text-gray-700 hover:bg-gray-300' }}">
-                                En cours
-                            </a>
-                            <a href="{{ route('tasks.index', array_merge(request()->except('status'), ['status' => 'done', 'week' => request('week')])) }}"
-                               class="px-3 py-1 rounded-full text-xs font-medium {{ request('status') === 'done' ? 'bg-green-100 text-green-800' : 'bg-gray-200 text-gray-700 hover:bg-gray-300' }}">
-                                Terminé
-                            </a>
-                        </div>
-                    </div>
+                            // Mettre à jour ou supprimer le filtre
+                            if (filterValue) {
+                                params.set(filterName, filterValue);
+                            } else {
+                                params.delete(filterName);
+                            }
 
-                    <!-- Utilisateur -->
-                    <div>
-                        <h4 class="text-sm font-semibold text-gray-700 mb-2">Assigné à</h4>
-                        <div class="flex flex-wrap gap-2">
-                            <a href="{{ route('tasks.index', array_merge(request()->except('user'), ['week' => request('week')])) }}"
-                               class="px-3 py-1 rounded-full text-xs font-medium {{ !request('user') ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300' }}">
-                                Tous
-                            </a>
-                            @foreach($users as $user)
-                                <a href="{{ route('tasks.index', array_merge(request()->except('user'), ['user' => $user->id, 'week' => request('week')])) }}"
-                                   class="px-3 py-1 rounded-full text-xs font-medium {{ request('user') == $user->id ? 'bg-purple-100 text-purple-800' : 'bg-gray-200 text-gray-700 hover:bg-gray-300' }}">
-                                    {{ $user->name }}
-                                </a>
-                            @endforeach
-                        </div>
-                    </div>
+                            // Rediriger avec tous les paramètres
+                            window.location.href = url.pathname + '?' + params.toString();
+                        }
+                    </script>
                 </div>
             </div>
 
             <!-- Grille hebdomadaire (7 jours) -->
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6">
+                <div class="p-4">
                     @if($tasks->isEmpty())
                         <div class="text-center py-8">
                             <p class="text-gray-500 text-lg">Aucune tâche trouvée.</p>
@@ -220,23 +220,23 @@
                             </a>
                         </div>
                     @else
-                        <!-- Grille de 7 colonnes -->
-                        <div class="grid grid-cols-7 gap-4">
+                        <!-- Grille de 7 colonnes pour les 7 jours de la semaine -->
+                        <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 0.75rem;">
                             @foreach($weekDays as $dateKey => $dayData)
-                                <div class="flex flex-col">
+                                <div style="display: flex; flex-direction: column; min-width: 0;">
                                     <!-- En-tête du jour -->
                                     <div class="mb-3 sticky top-0 bg-white z-10 pb-2">
                                         <div class="flex items-center justify-between px-2">
                                             <div class="text-center flex-1">
-                                                <div class="font-semibold text-gray-900 {{ $dayData['is_today'] ? 'text-blue-600' : '' }}">
+                                                <div class="font-semibold text-gray-900 {{ $dayData['is_today'] ? $themeText : '' }}">
                                                     {{ $dayData['short_label'] }}
                                                 </div>
-                                                <div class="text-2xl font-bold {{ $dayData['is_today'] ? 'text-blue-600' : 'text-gray-400' }}">
+                                                <div class="text-2xl font-bold {{ $dayData['is_today'] ? $themeText : 'text-gray-400' }}">
                                                     {{ $dayData['day_number'] }}
                                                 </div>
                                             </div>
                                             <button onclick="openQuickCreate('{{ $dateKey }}')"
-                                                    class="flex-shrink-0 w-7 h-7 rounded-full bg-blue-500 hover:bg-blue-600 text-white flex items-center justify-center transition-colors"
+                                                    class="flex-shrink-0 w-7 h-7 rounded-full {{ $themeBg }} hover:{{ $themeBgHover }} text-white flex items-center justify-center transition-colors"
                                                     title="Créer une tâche">
                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
@@ -254,7 +254,8 @@
 
                                         @forelse($dayData['tasks'] as $task)
                                             <!-- Carte de tâche draggable -->
-                                            <div class="task-card bg-white border-l-4 {{ $task->context ? $task->context->border_class : 'border-l-4 border-gray-500' }} rounded-lg p-3 shadow-sm hover:shadow-md transition-all cursor-move"
+                                            <div class="task-card bg-white {{ $task->context ? $task->context->border_class : 'border-l-4 border-gray-500' }} rounded-lg p-3 shadow-sm hover:shadow-md transition-all cursor-move"
+                                                 style="{{ $task->context ? $task->context->border_style : '' }}"
                                                  draggable="true"
                                                  data-task-id="{{ $task->id }}"
                                                  ondragstart="handleDragStart(event)"
@@ -279,13 +280,13 @@
                                                 <!-- Contexte et catégories -->
                                                 <div class="flex flex-wrap gap-1 mb-2">
                                                     @if($task->context)
-                                                        <span class="px-1.5 py-0.5 text-xs rounded {{ $task->context->badge_class }}">
+                                                        <span class="px-1.5 py-0.5 text-xs rounded {{ $task->context->badge_class }}" style="{{ $task->context->badge_style }}">
                                                             {{ $task->context->name }}
                                                         </span>
                                                     @endif
                                                     @if($task->categories && $task->categories->isNotEmpty())
                                                         @foreach($task->categories->take(2) as $category)
-                                                            <span class="px-1.5 py-0.5 text-xs rounded {{ $category->badge_class }}">
+                                                            <span class="px-1.5 py-0.5 text-xs rounded {{ $category->badge_class }}" style="{{ $category->badge_style }}">
                                                                 {{ $category->name }}
                                                             </span>
                                                         @endforeach
@@ -323,7 +324,7 @@
     <!-- Modal de création rapide de tâche -->
     <div id="quick-create-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
         <div class="relative top-20 mx-auto p-5 border w-full max-w-md shadow-lg rounded-md bg-white">
-            <div class="flex justify-between items-center mb-4">
+            <div class="flex justify-between items-center mb-4 px-2 pt-2">
                 <h3 class="text-lg font-medium text-gray-900">Créer une tâche rapide</h3>
                 <button onclick="closeQuickCreate()" class="text-gray-400 hover:text-gray-600">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -332,7 +333,7 @@
                 </button>
             </div>
 
-            <form id="quick-create-form" action="{{ route('tasks.store') }}" method="POST">
+            <form id="quick-create-form" action="{{ route('tasks.store') }}" method="POST" class="px-2 pb-2">
                 @csrf
                 <input type="hidden" name="due_date" id="quick-due-date">
 

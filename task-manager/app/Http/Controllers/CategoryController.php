@@ -34,7 +34,20 @@ class CategoryController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255|unique:categories,name',
-            'color' => 'required|string|in:' . implode(',', array_keys(Category::COLORS)),
+            'color' => [
+                'required',
+                'string',
+                function ($attribute, $value, $fail) {
+                    // Accepter soit un nom de couleur prédéfini, soit un code hexadécimal
+                    $isValidName = in_array($value, array_keys(Category::COLORS));
+                    $isValidHex = preg_match('/^#[0-9A-Fa-f]{6}$/', $value);
+
+                    if (!$isValidName && !$isValidHex) {
+                        $fail('La couleur doit être un nom valide ou un code hexadécimal (ex: #FF5733).');
+                    }
+                }
+            ],
+            'context_id' => 'required|exists:contexts,id',
         ]);
 
         $category = Category::create($validated);
@@ -67,7 +80,20 @@ class CategoryController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255|unique:categories,name,' . $category->id,
-            'color' => 'required|string|in:' . implode(',', array_keys(Category::COLORS)),
+            'color' => [
+                'required',
+                'string',
+                function ($attribute, $value, $fail) {
+                    // Accepter soit un nom de couleur prédéfini, soit un code hexadécimal
+                    $isValidName = in_array($value, array_keys(Category::COLORS));
+                    $isValidHex = preg_match('/^#[0-9A-Fa-f]{6}$/', $value);
+
+                    if (!$isValidName && !$isValidHex) {
+                        $fail('La couleur doit être un nom valide ou un code hexadécimal (ex: #FF5733).');
+                    }
+                }
+            ],
+            'context_id' => 'required|exists:contexts,id',
         ]);
 
         $category->update($validated);

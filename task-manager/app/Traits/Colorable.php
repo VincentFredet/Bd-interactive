@@ -5,10 +5,23 @@ namespace App\Traits;
 trait Colorable
 {
     /**
+     * Check if color is a custom hex color
+     */
+    protected function isCustomColor(): bool
+    {
+        return str_starts_with($this->color, '#');
+    }
+
+    /**
      * Get badge CSS classes based on color
      */
     public function getBadgeClassAttribute(): string
     {
+        // Si c'est une couleur personnalisée, utiliser un style inline
+        if ($this->isCustomColor()) {
+            return ''; // Le style sera appliqué inline
+        }
+
         $colorClasses = [
             'gray' => 'bg-gray-100 text-gray-800',
             'blue' => 'bg-blue-100 text-blue-800',
@@ -26,10 +39,28 @@ trait Colorable
     }
 
     /**
+     * Get badge inline style for custom colors
+     */
+    public function getBadgeStyleAttribute(): string
+    {
+        if ($this->isCustomColor()) {
+            $hex = $this->color;
+            // Créer une version claire pour le fond
+            return "background-color: {$hex}22; color: {$hex}; border: 1px solid {$hex}66;";
+        }
+        return '';
+    }
+
+    /**
      * Get hexadecimal color value for use in inline styles
      */
     public function getColorHexAttribute(): string
     {
+        // Si c'est déjà un code hex, le retourner directement
+        if ($this->isCustomColor()) {
+            return $this->color;
+        }
+
         $colorHex = [
             'gray' => '#6B7280',
             'blue' => '#3B82F6',
@@ -51,6 +82,10 @@ trait Colorable
      */
     public function getButtonActiveClassAttribute(): string
     {
+        if ($this->isCustomColor()) {
+            return ''; // Retourne vide, le style sera inline
+        }
+
         $colorClasses = [
             'gray' => 'bg-gray-500 hover:bg-gray-700',
             'blue' => 'bg-blue-500 hover:bg-blue-700',
@@ -68,10 +103,25 @@ trait Colorable
     }
 
     /**
+     * Get button inline style for active state (custom colors)
+     */
+    public function getButtonActiveStyleAttribute(): string
+    {
+        if ($this->isCustomColor()) {
+            return "background-color: {$this->color}; color: white;";
+        }
+        return '';
+    }
+
+    /**
      * Get button CSS classes for inactive state
      */
     public function getButtonInactiveClassAttribute(): string
     {
+        if ($this->isCustomColor()) {
+            return 'bg-white border-2 border-gray-300 hover:bg-gray-100';
+        }
+
         $colorClasses = [
             'gray' => 'bg-gray-200 text-gray-700 hover:bg-gray-300',
             'blue' => 'bg-blue-200 text-blue-700 hover:bg-blue-300',
@@ -89,10 +139,25 @@ trait Colorable
     }
 
     /**
+     * Get button inline style for inactive state (custom colors)
+     */
+    public function getButtonInactiveStyleAttribute(): string
+    {
+        if ($this->isCustomColor()) {
+            return "color: {$this->color};";
+        }
+        return '';
+    }
+
+    /**
      * Get border CSS class based on color
      */
     public function getBorderClassAttribute(): string
     {
+        if ($this->isCustomColor()) {
+            return 'border-l-4';
+        }
+
         $colorClasses = [
             'gray' => 'border-l-4 border-gray-500',
             'blue' => 'border-l-4 border-blue-500',
@@ -107,5 +172,16 @@ trait Colorable
         ];
 
         return $colorClasses[$this->color] ?? 'border-l-4 border-gray-500';
+    }
+
+    /**
+     * Get border inline style for custom colors
+     */
+    public function getBorderStyleAttribute(): string
+    {
+        if ($this->isCustomColor()) {
+            return "border-left-color: {$this->color};";
+        }
+        return '';
     }
 }

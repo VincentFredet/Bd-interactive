@@ -304,15 +304,27 @@
             const formData = new FormData(form);
             const errorDiv = document.getElementById('category-error');
 
+            // Cacher les erreurs précédentes
+            errorDiv.classList.add('hidden');
+
             fetch('{{ route('categories.store') }}', {
                 method: 'POST',
                 headers: {
                     'X-CSRF-TOKEN': '{{ csrf_token() }}',
                     'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
                 },
                 body: formData
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    // Gérer les erreurs de validation (422)
+                    return response.json().then(err => {
+                        throw err;
+                    });
+                }
+                return response.json();
+            })
             .then(data => {
                 if (data.success) {
                     // Ajouter la nouvelle catégorie au select
@@ -320,6 +332,11 @@
                     const option = new Option(data.category.name, data.category.id, true, true);
                     option.setAttribute('data-color', data.category.color);
                     select.add(option);
+
+                    // Réinitialiser le formulaire
+                    form.reset();
+                    document.getElementById('quick-color').value = 'blue';
+                    document.getElementById('quick-custom-color').classList.add('hidden');
 
                     // Fermer le modal
                     closeCategoryModal();
@@ -329,7 +346,16 @@
                 }
             })
             .catch(error => {
-                errorDiv.textContent = 'Erreur lors de la création de la catégorie';
+                console.error('Erreur:', error);
+                // Afficher les erreurs de validation
+                if (error.errors) {
+                    const messages = Object.values(error.errors).flat();
+                    errorDiv.textContent = messages.join(', ');
+                } else if (error.message) {
+                    errorDiv.textContent = error.message;
+                } else {
+                    errorDiv.textContent = 'Erreur lors de la création de la catégorie';
+                }
                 errorDiv.classList.remove('hidden');
             });
         }
@@ -338,7 +364,7 @@
     <!-- Modal de création rapide de catégorie -->
     <div id="category-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
         <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-            <div class="flex justify-between items-center mb-4">
+            <div class="flex justify-between items-center mb-4 px-2 pt-2">
                 <h3 class="text-lg font-medium text-gray-900">Créer une nouvelle catégorie</h3>
                 <button onclick="closeCategoryModal()" class="text-gray-400 hover:text-gray-600">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -347,7 +373,7 @@
                 </button>
             </div>
 
-            <form id="quick-category-form" onsubmit="event.preventDefault(); createQuickCategory();">
+            <form id="quick-category-form" onsubmit="event.preventDefault(); createQuickCategory();" class="px-2 pb-2">
                 @csrf
                 <div class="mb-4">
                     <label for="quick-name" class="block text-sm font-medium text-gray-700 mb-2">Nom *</label>
@@ -357,21 +383,70 @@
                 </div>
 
                 <div class="mb-4">
+                    <label for="quick-context" class="block text-sm font-medium text-gray-700 mb-2">Contexte *</label>
+                    <select name="context_id" id="quick-context" required
+                            class="w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                        <option value="">Sélectionner un contexte</option>
+                        @foreach($contexts as $context)
+                            <option value="{{ $context->id }}">{{ $context->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div class="mb-4">
                     <label class="block text-sm font-medium text-gray-700 mb-2">Couleur *</label>
-                    <div class="grid grid-cols-5 gap-2">
+                    <div class="flex flex-wrap gap-2 mb-3">
+                        @php
+                            $colorHexValues = [
+                                'gray' => '#6B7280',
+                                'blue' => '#3B82F6',
+                                'green' => '#10B981',
+                                'yellow' => '#F59E0B',
+                                'red' => '#EF4444',
+                                'purple' => '#8B5CF6',
+                                'pink' => '#EC4899',
+                                'indigo' => '#6366F1',
+                                'teal' => '#14B8A6',
+                                'orange' => '#F97316',
+                            ];
+                        @endphp
                         @foreach(\App\Models\Category::COLORS as $colorKey => $colorName)
-                            <label class="cursor-pointer">
-                                <input type="radio" name="color" value="{{ $colorKey }}"
+                            <label class="cursor-pointer" style="position: relative;">
+                                <input type="radio" name="color_type" value="{{ $colorKey }}"
                                        {{ $colorKey === 'blue' ? 'checked' : '' }}
-                                       class="sr-only peer" required>
-                                <div class="w-10 h-10 rounded-full bg-{{ $colorKey }}-500 border-2 border-gray-200
-                                            peer-checked:border-{{ $colorKey }}-700 peer-checked:ring-2 peer-checked:ring-{{ $colorKey }}-200
-                                            hover:scale-110 transition-transform"
+                                       onclick="document.getElementById('quick-color').value='{{ $colorKey }}'; document.getElementById('quick-custom-color').classList.add('hidden');"
+                                       style="position: absolute; width: 1px; height: 1px; opacity: 0;" required>
+                                <div style="width: 40px; height: 40px; border-radius: 50%; border: 2px solid #e5e7eb; background-color: {{ $colorHexValues[$colorKey] ?? '#6B7280' }}; transition: all 0.2s; cursor: pointer;"
+                                     onmouseover="this.style.transform='scale(1.1)'"
+                                     onmouseout="this.style.transform='scale(1)'"
                                      title="{{ $colorName }}">
                                 </div>
                             </label>
                         @endforeach
+                        <label class="cursor-pointer" style="position: relative;">
+                            <input type="radio" name="color_type" value="custom"
+                                   onclick="document.getElementById('quick-custom-color').classList.remove('hidden'); document.getElementById('quick-hex-input').focus();"
+                                   style="position: absolute; width: 1px; height: 1px; opacity: 0;">
+                            <div style="width: 40px; height: 40px; border-radius: 50%; border: 2px solid #e5e7eb; background: linear-gradient(135deg, #ef4444 0%, #eab308 50%, #3b82f6 100%); transition: all 0.2s; cursor: pointer;"
+                                 onmouseover="this.style.transform='scale(1.1)'"
+                                 onmouseout="this.style.transform='scale(1)'"
+                                 title="Personnalisée">
+                            </div>
+                        </label>
                     </div>
+
+                    <div id="quick-custom-color" class="hidden flex items-center gap-2">
+                        <label for="quick-hex-input" class="text-xs text-gray-600">Hex:</label>
+                        <input type="text" id="quick-hex-input"
+                               placeholder="#FF5733"
+                               oninput="document.getElementById('quick-color').value = this.value;"
+                               class="border-gray-300 rounded-md shadow-sm text-xs focus:ring-indigo-500 focus:border-indigo-500 flex-1">
+                        <input type="color"
+                               onchange="document.getElementById('quick-hex-input').value = this.value; document.getElementById('quick-color').value = this.value;"
+                               class="w-10 h-10 cursor-pointer rounded border-2 border-gray-300">
+                    </div>
+
+                    <input type="hidden" name="color" id="quick-color" value="blue">
                 </div>
 
                 <div id="category-error" class="hidden mb-4 text-sm text-red-600"></div>
