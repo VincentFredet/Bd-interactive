@@ -1,11 +1,13 @@
 <?php
 
+use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ContextController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SubtaskController;
 use App\Http\Controllers\TaskCommentController;
 use App\Http\Controllers\TaskController;
+use App\Http\Controllers\TaskImageController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -21,7 +23,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Tasks routes
     Route::resource('tasks', TaskController::class);
     Route::patch('/tasks/{task}/status', [TaskController::class, 'updateStatus'])->name('tasks.update-status');
-    
+    Route::patch('/tasks/{task}/due-date', [TaskController::class, 'updateDueDate'])->name('tasks.update-due-date');
+
     // Daily task management
     Route::get('/daily', [TaskController::class, 'daily'])->name('tasks.daily');
     Route::patch('/tasks/{task}/complete', [TaskController::class, 'complete'])->name('tasks.complete');
@@ -29,6 +32,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     
     // Contexts routes
     Route::resource('contexts', ContextController::class);
+
+    // Categories routes
+    Route::resource('categories', CategoryController::class);
 
     // Subtasks routes
     Route::post('/tasks/{task}/subtasks', [SubtaskController::class, 'store'])->name('subtasks.store');
@@ -42,6 +48,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/tasks/{task}/comments', [TaskCommentController::class, 'store'])->name('task-comments.store');
     Route::patch('/comments/{comment}', [TaskCommentController::class, 'update'])->name('task-comments.update');
     Route::delete('/comments/{comment}', [TaskCommentController::class, 'destroy'])->name('task-comments.destroy');
+
+    // Task images routes
+    Route::post('/tasks/{task}/images', [TaskImageController::class, 'store'])->name('task-images.store');
+    Route::delete('/task-images/{image}', [TaskImageController::class, 'destroy'])->name('task-images.destroy');
+    Route::post('/tasks/{task}/images/reorder', [TaskImageController::class, 'reorder'])->name('task-images.reorder');
 
     // Notifications routes
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');

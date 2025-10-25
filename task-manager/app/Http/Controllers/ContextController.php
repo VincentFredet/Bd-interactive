@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Context;
+use App\Helpers\ColorHelper;
 use Illuminate\Http\Request;
 
 class ContextController extends Controller
@@ -21,7 +22,9 @@ class ContextController extends Controller
      */
     public function create()
     {
-        return view('contexts.create');
+        $colors = Context::COLORS;
+        $colorHexMap = ColorHelper::getColorHexMap();
+        return view('contexts.create', compact('colors', 'colorHexMap'));
     }
 
     /**
@@ -31,6 +34,7 @@ class ContextController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255|unique:contexts,name',
+            'color' => 'required|string|in:' . implode(',', array_keys(Context::COLORS)),
         ]);
 
         Context::create($validated);
@@ -52,7 +56,9 @@ class ContextController extends Controller
      */
     public function edit(Context $context)
     {
-        return view('contexts.edit', compact('context'));
+        $colors = Context::COLORS;
+        $colorHexMap = ColorHelper::getColorHexMap();
+        return view('contexts.edit', compact('context', 'colors', 'colorHexMap'));
     }
 
     /**
@@ -62,6 +68,7 @@ class ContextController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255|unique:contexts,name,' . $context->id,
+            'color' => 'required|string|in:' . implode(',', array_keys(Context::COLORS)),
         ]);
 
         $context->update($validated);

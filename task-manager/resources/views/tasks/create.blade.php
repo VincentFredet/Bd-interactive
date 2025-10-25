@@ -97,6 +97,35 @@
                                 @enderror
                             </div>
 
+                            <!-- Catégories -->
+                            <div class="md:col-span-2">
+                                <div class="flex items-center justify-between mb-2">
+                                    <label class="block text-sm font-medium text-gray-700">Catégories</label>
+                                    <button type="button" onclick="openCategoryModal()"
+                                            class="text-sm text-blue-600 hover:text-blue-800 flex items-center">
+                                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                                        </svg>
+                                        Nouvelle catégorie
+                                    </button>
+                                </div>
+                                <select name="categories[]" id="categories" multiple
+                                        class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                                        size="5">
+                                    @foreach($categories as $category)
+                                        <option value="{{ $category->id }}"
+                                                {{ in_array($category->id, old('categories', [])) ? 'selected' : '' }}
+                                                data-color="{{ $category->color }}">
+                                            {{ $category->name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                <p class="mt-1 text-xs text-gray-500">Maintenez Ctrl (Cmd sur Mac) pour sélectionner plusieurs catégories</p>
+                                @error('categories')
+                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
+                            </div>
+
                             <!-- Semaine -->
                             <div>
                                 <label for="week_date" class="block text-sm font-medium text-gray-700">Semaine</label>
@@ -130,10 +159,65 @@
                                 @error('image')
                                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                                 @enderror
-                                
+
                                 <!-- Prévisualisation de l'image -->
                                 <div id="image-preview" class="mt-2 hidden">
                                     <img id="preview-img" src="" alt="Prévisualisation" class="max-w-xs h-32 object-cover rounded">
+                                </div>
+                            </div>
+
+                            <!-- Récurrence -->
+                            <div class="md:col-span-2 border-t pt-4 mt-4">
+                                <div class="flex items-center mb-4">
+                                    <input type="checkbox" name="is_recurring" id="is_recurring" value="1"
+                                           {{ old('is_recurring') ? 'checked' : '' }}
+                                           onchange="toggleRecurrence()"
+                                           class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                                    <label for="is_recurring" class="ml-2 block text-sm font-medium text-gray-700">
+                                        🔄 Tâche récurrente
+                                    </label>
+                                </div>
+
+                                <div id="recurrence-options" class="hidden space-y-4 pl-6 border-l-2 border-indigo-200">
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <!-- Type de récurrence -->
+                                        <div>
+                                            <label for="recurrence_type" class="block text-sm font-medium text-gray-700">Fréquence</label>
+                                            <select name="recurrence_type" id="recurrence_type"
+                                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                                                <option value="daily" {{ old('recurrence_type') === 'daily' ? 'selected' : '' }}>Quotidienne</option>
+                                                <option value="weekly" {{ old('recurrence_type', 'weekly') === 'weekly' ? 'selected' : '' }}>Hebdomadaire</option>
+                                                <option value="monthly" {{ old('recurrence_type') === 'monthly' ? 'selected' : '' }}>Mensuelle</option>
+                                                <option value="yearly" {{ old('recurrence_type') === 'yearly' ? 'selected' : '' }}>Annuelle</option>
+                                            </select>
+                                        </div>
+
+                                        <!-- Intervalle -->
+                                        <div>
+                                            <label for="recurrence_interval" class="block text-sm font-medium text-gray-700">Tous les</label>
+                                            <div class="flex items-center space-x-2">
+                                                <input type="number" name="recurrence_interval" id="recurrence_interval" min="1" value="{{ old('recurrence_interval', 1) }}"
+                                                       class="mt-1 block w-20 border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                                                <span class="text-sm text-gray-600" id="recurrence-interval-label">semaine(s)</span>
+                                            </div>
+                                        </div>
+
+                                        <!-- Date de fin (optionnelle) -->
+                                        <div class="md:col-span-2">
+                                            <label for="recurrence_end_date" class="block text-sm font-medium text-gray-700">Date de fin (optionnelle)</label>
+                                            <input type="date" name="recurrence_end_date" id="recurrence_end_date"
+                                                   value="{{ old('recurrence_end_date') }}"
+                                                   class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                                            <p class="mt-1 text-xs text-gray-500">Laissez vide pour une récurrence illimitée</p>
+                                        </div>
+                                    </div>
+
+                                    <div class="bg-blue-50 border border-blue-200 rounded-md p-3">
+                                        <p class="text-sm text-blue-800">
+                                            <strong>ℹ️ Info :</strong> Les tâches récurrentes génèrent automatiquement de nouvelles instances selon le modèle défini.
+                                            La tâche originale sert de template et ne disparaît pas.
+                                        </p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -158,19 +242,151 @@
         function previewImage(input) {
             const preview = document.getElementById('image-preview');
             const previewImg = document.getElementById('preview-img');
-            
+
             if (input.files && input.files[0]) {
                 const reader = new FileReader();
-                
+
                 reader.onload = function(e) {
                     previewImg.src = e.target.result;
                     preview.classList.remove('hidden');
                 };
-                
+
                 reader.readAsDataURL(input.files[0]);
             } else {
                 preview.classList.add('hidden');
             }
         }
+
+        // Gestion de l'affichage des options de récurrence
+        function toggleRecurrence() {
+            const checkbox = document.getElementById('is_recurring');
+            const options = document.getElementById('recurrence-options');
+
+            if (checkbox.checked) {
+                options.classList.remove('hidden');
+            } else {
+                options.classList.add('hidden');
+            }
+        }
+
+        // Mettre à jour le label de l'intervalle selon le type
+        document.getElementById('recurrence_type')?.addEventListener('change', function() {
+            const label = document.getElementById('recurrence-interval-label');
+            const labels = {
+                'daily': 'jour(s)',
+                'weekly': 'semaine(s)',
+                'monthly': 'mois',
+                'yearly': 'an(s)'
+            };
+            label.textContent = labels[this.value] || 'unité(s)';
+        });
+
+        // Afficher les options si la checkbox est cochée au chargement (old input)
+        document.addEventListener('DOMContentLoaded', function() {
+            if (document.getElementById('is_recurring').checked) {
+                document.getElementById('recurrence-options').classList.remove('hidden');
+            }
+        });
+
+        // Gestion du modal de création rapide de catégorie
+        function openCategoryModal() {
+            document.getElementById('category-modal').classList.remove('hidden');
+        }
+
+        function closeCategoryModal() {
+            document.getElementById('category-modal').classList.add('hidden');
+            document.getElementById('quick-category-form').reset();
+            document.getElementById('category-error').classList.add('hidden');
+        }
+
+        function createQuickCategory() {
+            const form = document.getElementById('quick-category-form');
+            const formData = new FormData(form);
+            const errorDiv = document.getElementById('category-error');
+
+            fetch('{{ route('categories.store') }}', {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'application/json',
+                },
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Ajouter la nouvelle catégorie au select
+                    const select = document.getElementById('categories');
+                    const option = new Option(data.category.name, data.category.id, true, true);
+                    option.setAttribute('data-color', data.category.color);
+                    select.add(option);
+
+                    // Fermer le modal
+                    closeCategoryModal();
+                } else {
+                    errorDiv.textContent = 'Erreur lors de la création de la catégorie';
+                    errorDiv.classList.remove('hidden');
+                }
+            })
+            .catch(error => {
+                errorDiv.textContent = 'Erreur lors de la création de la catégorie';
+                errorDiv.classList.remove('hidden');
+            });
+        }
     </script>
+
+    <!-- Modal de création rapide de catégorie -->
+    <div id="category-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-medium text-gray-900">Créer une nouvelle catégorie</h3>
+                <button onclick="closeCategoryModal()" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <form id="quick-category-form" onsubmit="event.preventDefault(); createQuickCategory();">
+                @csrf
+                <div class="mb-4">
+                    <label for="quick-name" class="block text-sm font-medium text-gray-700 mb-2">Nom *</label>
+                    <input type="text" name="name" id="quick-name" required
+                           class="w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                           placeholder="Ex: Design, Développement...">
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Couleur *</label>
+                    <div class="grid grid-cols-5 gap-2">
+                        @foreach(\App\Models\Category::COLORS as $colorKey => $colorName)
+                            <label class="cursor-pointer">
+                                <input type="radio" name="color" value="{{ $colorKey }}"
+                                       {{ $colorKey === 'blue' ? 'checked' : '' }}
+                                       class="sr-only peer" required>
+                                <div class="w-10 h-10 rounded-full bg-{{ $colorKey }}-500 border-2 border-gray-200
+                                            peer-checked:border-{{ $colorKey }}-700 peer-checked:ring-2 peer-checked:ring-{{ $colorKey }}-200
+                                            hover:scale-110 transition-transform"
+                                     title="{{ $colorName }}">
+                                </div>
+                            </label>
+                        @endforeach
+                    </div>
+                </div>
+
+                <div id="category-error" class="hidden mb-4 text-sm text-red-600"></div>
+
+                <div class="flex justify-end space-x-2">
+                    <button type="button" onclick="closeCategoryModal()"
+                            class="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600">
+                        Annuler
+                    </button>
+                    <button type="submit"
+                            class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+                        Créer
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 </x-app-layout>

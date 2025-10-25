@@ -19,25 +19,64 @@ class TaskController extends Controller
     public function index(Request $request)
     {
         // Déterminer la semaine à afficher
-        $weekStart = $request->has('week') 
+        $weekStart = $request->has('week')
             ? Carbon::parse($request->week)->startOfWeek(Carbon::MONDAY)
             : Task::getWeekStart();
-        
-        $query = Task::with(['context', 'user']);
+
+        $query = Task::with(['context', 'user', 'categories']);
         
         // Filtrer par semaine
         $query->forWeek($weekStart);
-        
+
         // Filtrer par contexte si spécifié
         if ($request->has('context') && $request->context !== '') {
             $query->where('context_id', $request->context);
         }
-        
+
+        // Filtrer par catégorie si spécifiée
+        if ($request->has('category') && $request->category !== '') {
+            $query->whereHas('categories', function($q) use ($request) {
+                $q->where('categories.id', $request->category);
+            });
+        }
+
+        // Filtrer par priorité si spécifiée
+        if ($request->has('priority') && $request->priority !== '') {
+            $query->where('priority', $request->priority);
+        }
+
+        // Filtrer par statut si spécifié
+        if ($request->has('status') && $request->status !== '') {
+            $query->where('status', $request->status);
+        }
+
+        // Filtrer par utilisateur si spécifié
+        if ($request->has('user') && $request->user !== '') {
+            $query->where('user_id', $request->user);
+        }
+
         $tasks = $query->orderBy('priority', 'desc')
                       ->orderBy('created_at', 'desc')
                       ->get();
-        
+
+        // Grouper les tâches par jour de la semaine
+        $weekDays = [];
+        for ($i = 0; $i < 7; $i++) {
+            $day = $weekStart->copy()->addDays($i);
+            $weekDays[$day->format('Y-m-d')] = [
+                'date' => $day,
+                'label' => ucfirst($day->translatedFormat('l')),
+                'short_label' => ucfirst($day->translatedFormat('D')),
+                'day_number' => $day->format('d'),
+                'is_today' => $day->isToday(),
+                'tasks' => $tasks->filter(function($task) use ($day) {
+                    return $task->due_date && $task->due_date->isSameDay($day);
+                })->values()
+            ];
+        }
+
         $contexts = Context::all();
+        $categories = \App\Models\Category::all();
         $users = User::all();
         
         // Calculer les semaines pour la navigation
@@ -60,12 +99,14 @@ class TaskController extends Controller
         ];
         
         return view('tasks.index', compact(
-            'tasks', 
-            'contexts', 
-            'users', 
-            'weekStart', 
-            'previousWeek', 
-            'nextWeek', 
+            'tasks',
+            'weekDays',
+            'contexts',
+            'categories',
+            'users',
+            'weekStart',
+            'previousWeek',
+            'nextWeek',
             'currentWeek',
             'weekLabel',
             'weekStats'
@@ -79,8 +120,9 @@ class TaskController extends Controller
     {
         $contexts = Context::all();
         $users = User::all();
-        
-        return view('tasks.create', compact('contexts', 'users'));
+        $categories = \App\Models\Category::all();
+
+        return view('tasks.create', compact('contexts', 'users', 'categories'));
     }
 
     /**
@@ -104,9 +146,34 @@ class TaskController extends Controller
             $validated['image'] = $imageName;
         }
 
-        Task::create($validated);
+        // Gérer la récurrence
+        if ($request->has('is_recurring') && $request->is_recurring) {
+            $validated['is_recurring'] = true;
+            $validated['recurrence_pattern'] = [
+                'type' => $request->recurrence_type ?? 'weekly',
+                'interval' => (int) ($request->recurrence_interval ?? 1),
+            ];
 
-        return redirect()->route('tasks.index')->with('success', 'Tâche créée avec succès!');
+            if ($request->filled('recurrence_end_date')) {
+                $validated['recurrence_pattern']['end_date'] = $request->recurrence_end_date;
+            }
+        } else {
+            $validated['is_recurring'] = false;
+            $validated['recurrence_pattern'] = null;
+        }
+
+        $task = Task::create($validated);
+
+        // Synchroniser les catégories
+        if ($request->has('categories')) {
+            $task->categories()->sync($request->categories);
+        }
+
+        $message = $task->is_recurring
+            ? 'Tâche récurrente créée avec succès! Les instances seront générées automatiquement.'
+            : 'Tâche créée avec succès!';
+
+        return redirect()->route('tasks.index')->with('success', $message);
     }
 
     /**
@@ -125,8 +192,10 @@ class TaskController extends Controller
     {
         $contexts = Context::all();
         $users = User::all();
-        
-        return view('tasks.edit', compact('task', 'contexts', 'users'));
+        $categories = \App\Models\Category::all();
+        $task->load('categories', 'images');
+
+        return view('tasks.edit', compact('task', 'contexts', 'users', 'categories'));
     }
 
     /**
@@ -153,6 +222,13 @@ class TaskController extends Controller
         }
 
         $task->update($validated);
+
+        // Synchroniser les catégories
+        if ($request->has('categories')) {
+            $task->categories()->sync($request->categories);
+        } else {
+            $task->categories()->detach();
+        }
 
         return redirect()->route('tasks.index')->with('success', 'Tâche mise à jour avec succès!');
     }
@@ -216,39 +292,102 @@ class TaskController extends Controller
     }
 
     /**
+     * Update task due date via AJAX (for drag & drop)
+     */
+    public function updateDueDate(Request $request, Task $task)
+    {
+        try {
+            $validated = $request->validate([
+                'due_date' => 'required|date',
+            ]);
+
+            $task->update(['due_date' => $validated['due_date']]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Date mise à jour avec succès',
+                'task' => [
+                    'id' => $task->id,
+                    'due_date' => $task->due_date->format('Y-m-d'),
+                ],
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Données invalides',
+                'errors' => $e->errors(),
+            ], 422);
+        } catch (\Exception $e) {
+            \Log::error('Error updating task due date', [
+                'task_id' => $task->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de la mise à jour de la date',
+                'error' => config('app.debug') ? $e->getMessage() : 'Une erreur est survenue',
+            ], 500);
+        }
+    }
+
+    /**
      * Vue quotidienne des tâches
      */
     public function daily(Request $request)
     {
         // Déterminer le jour à afficher
-        $currentDate = $request->has('date') 
+        $currentDate = $request->has('date')
             ? Carbon::parse($request->date)
             : Carbon::today();
-        
-        $query = Task::with(['context', 'user']);
+
+        $query = Task::with(['context', 'user', 'categories']);
         
         // Filtrer par date d'échéance
         $query->forDate($currentDate);
-        
+
         // Filtrer par contexte si spécifié
         if ($request->has('context') && $request->context !== '') {
             $query->where('context_id', $request->context);
         }
-        
+
+        // Filtrer par catégorie si spécifiée
+        if ($request->has('category') && $request->category !== '') {
+            $query->whereHas('categories', function($q) use ($request) {
+                $q->where('categories.id', $request->category);
+            });
+        }
+
+        // Filtrer par priorité si spécifiée
+        if ($request->has('priority') && $request->priority !== '') {
+            $query->where('priority', $request->priority);
+        }
+
+        // Filtrer par statut si spécifié
+        if ($request->has('status') && $request->status !== '') {
+            $query->where('status', $request->status);
+        }
+
+        // Filtrer par utilisateur si spécifié
+        if ($request->has('user') && $request->user !== '') {
+            $query->where('user_id', $request->user);
+        }
+
         $tasks = $query->orderBy('priority', 'desc')
                       ->orderBy('created_at', 'desc')
                       ->get();
-        
+
         // Tâches en retard (seulement si on regarde aujourd'hui)
         $overdueTasks = collect();
         if ($currentDate->isToday()) {
-            $overdueTasks = Task::with(['context', 'user'])
+            $overdueTasks = Task::with(['context', 'user', 'categories'])
                                ->overdue()
                                ->orderBy('due_date', 'asc')
                                ->get();
         }
-        
+
         $contexts = Context::all();
+        $categories = \App\Models\Category::all();
         $users = User::all();
         
         // Navigation par jour
@@ -271,10 +410,11 @@ class TaskController extends Controller
         ];
         
         return view('tasks.daily', compact(
-            'tasks', 
+            'tasks',
             'overdueTasks',
-            'contexts', 
-            'users', 
+            'contexts',
+            'categories',
+            'users',
             'currentDate', 
             'previousDay', 
             'nextDay', 

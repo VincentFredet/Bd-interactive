@@ -4,9 +4,9 @@ namespace App\Models;
 
 use App\Traits\Colorable;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
-class Context extends Model
+class Category extends Model
 {
     use Colorable;
     protected $fillable = [
@@ -15,7 +15,7 @@ class Context extends Model
     ];
 
     /**
-     * Available color options for contexts
+     * Available color options for categories
      */
     public const COLORS = [
         'gray' => 'Gris',
@@ -31,10 +31,10 @@ class Context extends Model
     ];
 
     /**
-     * Get tasks that have this context
+     * Get tasks that have this category
      */
-    public function tasks(): HasMany
+    public function tasks(): BelongsToMany
     {
-        return $this->hasMany(Task::class);
+        return $this->belongsToMany(Task::class);
     }
 }
