@@ -202,7 +202,7 @@
                         <h3 class="text-lg font-medium text-red-900 mb-4">⚠️ Tâches en retard</h3>
                         <div class="grid gap-3">
                             @foreach($overdueTasks as $task)
-                                <div class="bg-white border border-red-200 rounded-lg p-4 {{ $task->context ? $task->context->border_class : '' }}">
+                                <div class="{{ $task->context ? $task->context->task_card_class : 'bg-white border-l-4 border-gray-500' }} border border-red-200 rounded-lg p-4" style="{{ $task->context ? $task->context->task_card_style : '' }}">
                                     <div class="flex items-center justify-between">
                                         <div class="flex-1">
                                             <div class="flex items-center space-x-2 mb-2">
@@ -267,7 +267,7 @@
                     @else
                         <div class="grid gap-4">
                             @foreach($tasks as $task)
-                                <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow task-item {{ $task->context ? $task->context->border_class : '' }}" data-task-id="{{ $task->id }}">
+                                <div class="{{ $task->context ? $task->context->task_card_class : 'bg-white border-l-4 border-gray-500' }} border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow task-item" style="{{ $task->context ? $task->context->task_card_style : '' }}" data-task-id="{{ $task->id }}">
                                     <div class="flex items-start justify-between">
                                         <div class="flex items-start space-x-3 flex-1">
                                             <!-- Checkbox pour cocher rapidement -->

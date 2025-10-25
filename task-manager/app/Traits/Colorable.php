@@ -184,4 +184,67 @@ trait Colorable
         }
         return '';
     }
+
+    /**
+     * Get task card CSS class with vibrant background
+     */
+    public function getTaskCardClassAttribute(): string
+    {
+        if ($this->isCustomColor()) {
+            return ''; // Will use inline style
+        }
+
+        $colorClasses = [
+            'gray' => 'bg-gray-100 border-l-4 border-gray-500',
+            'blue' => 'bg-blue-100 border-l-4 border-blue-500',
+            'green' => 'bg-green-100 border-l-4 border-green-500',
+            'yellow' => 'bg-yellow-100 border-l-4 border-yellow-500',
+            'red' => 'bg-red-100 border-l-4 border-red-500',
+            'purple' => 'bg-purple-100 border-l-4 border-purple-500',
+            'pink' => 'bg-pink-100 border-l-4 border-pink-500',
+            'indigo' => 'bg-indigo-100 border-l-4 border-indigo-500',
+            'teal' => 'bg-teal-100 border-l-4 border-teal-500',
+            'orange' => 'bg-orange-100 border-l-4 border-orange-500',
+        ];
+
+        return $colorClasses[$this->color] ?? 'bg-gray-100 border-l-4 border-gray-500';
+    }
+
+    /**
+     * Get task card inline style for custom colors
+     */
+    public function getTaskCardStyleAttribute(): string
+    {
+        if ($this->isCustomColor()) {
+            $hex = $this->color;
+            // Fond coloré à 20% d'opacité + bordure gauche
+            return "background: linear-gradient(to right, {$hex} 4px, {$hex}33 4px); border-left: 4px solid {$hex};";
+        }
+        return '';
+    }
+
+    /**
+     * Get text color class for task content
+     */
+    public function getTaskTextClassAttribute(): string
+    {
+        if ($this->isCustomColor()) {
+            return 'text-gray-900'; // Texte sombre pour lisibilité
+        }
+
+        $textClasses = [
+            'gray' => 'text-gray-900',
+            'blue' => 'text-blue-900',
+            'green' => 'text-green-900',
+            'yellow' => 'text-yellow-900',
+            'red' => 'text-red-900',
+            'purple' => 'text-purple-900',
+            'pink' => 'text-pink-900',
+            'indigo' => 'text-indigo-900',
+            'teal' => 'text-teal-900',
+            'orange' => 'text-orange-900',
+        ];
+
+        return $textClasses[$this->color] ?? 'text-gray-900';
+    }
 }

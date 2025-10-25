@@ -253,9 +253,9 @@
                                          ondragleave="handleDragLeave(event)">
 
                                         @forelse($dayData['tasks'] as $task)
-                                            <!-- Carte de tâche draggable -->
-                                            <div class="task-card bg-white {{ $task->context ? $task->context->border_class : 'border-l-4 border-gray-500' }} rounded-lg p-3 shadow-sm hover:shadow-md transition-all cursor-move"
-                                                 style="{{ $task->context ? $task->context->border_style : '' }}"
+                                            <!-- Carte de tâche draggable avec fond coloré -->
+                                            <div class="task-card {{ $task->context ? $task->context->task_card_class : 'bg-white border-l-4 border-gray-500' }} rounded-lg p-3 shadow-sm hover:shadow-md transition-all cursor-move"
+                                                 style="{{ $task->context ? $task->context->task_card_style : '' }}"
                                                  draggable="true"
                                                  data-task-id="{{ $task->id }}"
                                                  ondragstart="handleDragStart(event)"
