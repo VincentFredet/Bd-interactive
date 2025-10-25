@@ -32,5 +32,62 @@
                 {{ $slot }}
             </main>
         </div>
+
+        <!-- Toast Container -->
+        <div id="toast-container" class="fixed top-4 right-4 z-50 space-y-2"></div>
+
+        <!-- Toast Notification System -->
+        <script>
+            // Toast notification function
+            window.showToast = function(message, type = 'success') {
+                const container = document.getElementById('toast-container');
+                const toast = document.createElement('div');
+
+                // Set colors based on type
+                let bgColor, textColor, icon;
+                switch(type) {
+                    case 'success':
+                        bgColor = 'bg-green-500';
+                        textColor = 'text-white';
+                        icon = '✓';
+                        break;
+                    case 'error':
+                        bgColor = 'bg-red-500';
+                        textColor = 'text-white';
+                        icon = '✗';
+                        break;
+                    case 'warning':
+                        bgColor = 'bg-yellow-500';
+                        textColor = 'text-white';
+                        icon = '⚠';
+                        break;
+                    case 'info':
+                        bgColor = 'bg-blue-500';
+                        textColor = 'text-white';
+                        icon = 'ℹ';
+                        break;
+                    default:
+                        bgColor = 'bg-gray-700';
+                        textColor = 'text-white';
+                        icon = '•';
+                }
+
+                toast.className = `${bgColor} ${textColor} px-6 py-4 rounded-lg shadow-lg flex items-center space-x-3 min-w-[300px] transform transition-all duration-300 translate-x-0 opacity-100`;
+                toast.innerHTML = `
+                    <span class="text-2xl">${icon}</span>
+                    <span class="flex-1 font-medium">${message}</span>
+                    <button onclick="this.parentElement.remove()" class="text-white hover:text-gray-200 text-xl font-bold">&times;</button>
+                `;
+
+                container.appendChild(toast);
+
+                // Auto remove after 4 seconds
+                setTimeout(() => {
+                    toast.style.transform = 'translateX(400px)';
+                    toast.style.opacity = '0';
+                    setTimeout(() => toast.remove(), 300);
+                }, 4000);
+            };
+        </script>
     </body>
 </html>

@@ -279,14 +279,18 @@
                                                             {{ $task->title }}
                                                         </h4>
                                                     </div>
-                                                    <span class="ml-1 px-1.5 py-0.5 text-xs rounded-full {{ $task->priority_badge_class }} flex-shrink-0">
-                                                        {{ substr(ucfirst($task->priority), 0, 1) }}
+                                                    <span class="ml-1 px-2 py-0.5 text-xs rounded-full {{ $task->priority_badge_class }} flex-shrink-0">
+                                                        @if($task->priority === 'low') Basse
+                                                        @elseif($task->priority === 'medium') Moyenne
+                                                        @elseif($task->priority === 'high') Haute
+                                                        @else Urgente
+                                                        @endif
                                                     </span>
                                                 </div>
 
                                                 <!-- Contexte et catégories -->
                                                 <div class="flex flex-wrap gap-1 mb-2">
-                                                    @if($task->context)
+                                                    @if($task->context && !request('context'))
                                                         <span class="px-1.5 py-0.5 text-xs rounded {{ $task->context->badge_class }}" style="{{ $task->context->badge_style }}">
                                                             {{ $task->context->name }}
                                                         </span>
@@ -300,16 +304,23 @@
                                                     @endif
                                                 </div>
 
-                                                <!-- Statut -->
+                                                <!-- Statut et utilisateur -->
                                                 <div class="flex items-center justify-between text-xs">
-                                                    <span class="px-2 py-0.5 rounded {{ $task->status_badge_class }}">
-                                                        @if($task->status === 'todo') À faire
-                                                        @elseif($task->status === 'in_progress') En cours
-                                                        @else Terminé
+                                                    <div class="flex items-center gap-1">
+                                                        <span class="px-2 py-0.5 rounded {{ $task->status_badge_class }}">
+                                                            @if($task->status === 'todo') À faire
+                                                            @elseif($task->status === 'in_progress') En cours
+                                                            @else Terminé
+                                                            @endif
+                                                        </span>
+                                                        @if($task->due_date && $task->due_date->isPast() && $task->status !== 'done')
+                                                            <span class="px-2 py-0.5 rounded bg-red-100 text-red-800 font-semibold" title="En retard de {{ $task->due_date->diffForHumans() }}">
+                                                                ⚠️ Retard
+                                                            </span>
                                                         @endif
-                                                    </span>
+                                                    </div>
                                                     @if($task->user)
-                                                        <span class="text-gray-500 truncate ml-1">{{ substr($task->user->name, 0, 10) }}</span>
+                                                        <span class="text-gray-600 text-xs">{{ $task->user->name }}</span>
                                                     @endif
                                                 </div>
                                             </div>
@@ -455,15 +466,15 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    // Refresh the page to update the UI
-                    location.reload();
+                    showToast(isChecked ? 'Tâche marquée comme terminée !' : 'Tâche remise en à faire', 'success');
+                    setTimeout(() => location.reload(), 500);
                 } else {
-                    alert('Erreur lors de la mise à jour du statut');
+                    showToast('Erreur lors de la mise à jour du statut', 'error');
                 }
             })
             .catch(error => {
                 console.error('Erreur:', error);
-                alert('Erreur lors de la mise à jour du statut');
+                showToast('Erreur lors de la mise à jour du statut', 'error');
             });
         }
 
@@ -544,16 +555,15 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    console.log('Date mise à jour avec succès');
-                    // Recharger la page pour voir les changements
-                    location.reload();
+                    showToast('Date de la tâche mise à jour !', 'success');
+                    setTimeout(() => location.reload(), 500);
                 } else {
-                    alert('Erreur lors de la mise à jour de la date');
+                    showToast('Erreur lors de la mise à jour de la date', 'error');
                 }
             })
             .catch(error => {
                 console.error('Erreur:', error);
-                alert('Erreur lors de la mise à jour de la date');
+                showToast('Erreur lors de la mise à jour de la date', 'error');
             });
         }
 

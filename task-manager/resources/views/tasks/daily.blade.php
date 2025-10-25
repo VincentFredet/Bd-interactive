@@ -5,6 +5,17 @@
                 {{ __('Gestion Quotidienne') }}
             </h2>
             <div class="flex space-x-2">
+                @if(request('user') == auth()->id())
+                    <a href="{{ route('tasks.daily', request()->except('user')) }}"
+                       class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-2 px-4 rounded flex items-center">
+                        📋 Toutes les tâches
+                    </a>
+                @else
+                    <a href="{{ route('tasks.daily', array_merge(request()->query(), ['user' => auth()->id()])) }}"
+                       class="bg-indigo-500 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded flex items-center">
+                        👤 Mes tâches
+                    </a>
+                @endif
                 <a href="{{ route('tasks.index') }}" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">
                     Vue Semaine
                 </a>
@@ -400,12 +411,15 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    location.reload(); // Recharger pour voir les changements
+                    showToast('Tâche terminée !', 'success');
+                    setTimeout(() => location.reload(), 500);
+                } else {
+                    showToast('Erreur lors de la complétion de la tâche', 'error');
                 }
             })
             .catch(error => {
                 console.error('Erreur:', error);
-                location.reload();
+                showToast('Erreur lors de la complétion de la tâche', 'error');
             });
         }
 
@@ -424,9 +438,9 @@
 
         document.getElementById('postponeForm').addEventListener('submit', function(e) {
             e.preventDefault();
-            
+
             const date = document.getElementById('postponeDate').value;
-            
+
             fetch(`/tasks/${currentTaskId}/postpone`, {
                 method: 'PATCH',
                 headers: {
@@ -439,13 +453,17 @@
             .then(data => {
                 if (data.success) {
                     closePostponeModal();
-                    location.reload();
+                    showToast('Tâche reportée avec succès !', 'success');
+                    setTimeout(() => location.reload(), 500);
+                } else {
+                    showToast('Erreur lors du report de la tâche', 'error');
+                    closePostponeModal();
                 }
             })
             .catch(error => {
                 console.error('Erreur:', error);
+                showToast('Erreur lors du report de la tâche', 'error');
                 closePostponeModal();
-                location.reload();
             });
         });
 
@@ -461,12 +479,15 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    location.reload();
+                    showToast('Statut mis à jour !', 'success');
+                    setTimeout(() => location.reload(), 500);
+                } else {
+                    showToast('Erreur lors de la mise à jour du statut', 'error');
                 }
             })
             .catch(error => {
                 console.error('Erreur:', error);
-                location.reload();
+                showToast('Erreur lors de la mise à jour du statut', 'error');
             });
         }
     </script>
